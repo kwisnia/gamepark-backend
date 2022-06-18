@@ -1,4 +1,4 @@
-module example/Test
+module github.com/kwisnia/inzynierka-backend
 
 go 1.18
 
