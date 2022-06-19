@@ -1,32 +1,31 @@
 package crypto
 
 import (
-	config_loader "github.com/kwisnia/inzynierka-backend/internal/pkg/config"
-	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	config_loader "github.com/kwisnia/inzynierka-backend/internal/pkg/config"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const oneYear = time.Hour * 24 * 365
 
-func HashAndSalt(pwd []byte) string {
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+func HashAndSalt(pwd string) string {
+	bytePwd := []byte(pwd)
+	hash, err := bcrypt.GenerateFromPassword(bytePwd, bcrypt.MinCost)
 	if err != nil {
 		log.Println(err)
 	}
 	return string(hash)
 }
 
-func ComparePasswords(hashedPwd string, plainPwd []byte) bool {
+func ComparePasswords(hashedPwd string, plainPwd string) bool {
 	byteHash := []byte(hashedPwd)
-	err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
-	if err != nil {
-		return false
-	}
-	return true
+	bytePwd := []byte(plainPwd)
+	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
+	return err == nil
 }
-
 
 func CreateToken(email string) (string, error) {
 	config := config_loader.Config
