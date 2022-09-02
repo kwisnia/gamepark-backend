@@ -47,8 +47,7 @@ type Game struct {
 	Artworks              []Artwork    `gorm:"foreignKey:GameID"`
 	Category              GameCategory `gorm:"foreignKey:CategoryID"`
 	CategoryID            uint
-	Cover                 Cover `gorm:"foreignKey:CoverID"`
-	CoverID               uint
+	Cover                 Cover  `gorm:"foreignKey:GameID"`
 	DLCs                  []Game `gorm:"foreignKey:DLCBaseReference"`
 	DLCBaseReference      *uint
 	ExpandedGames         []Game `gorm:"foreignKey:ExpandedGameReference"`
@@ -57,14 +56,16 @@ type Game struct {
 	ExpansionReference    *uint
 	ExternalGames         []schema.ExternalGame `gorm:"foreignKey:GameID"`
 	FirstReleaseDate      time.Time
-	Genres                []Genre                  `gorm:"foreignKey:ID"`
+	Genres                []Genre                  `gorm:"many2many:game_genres"`
 	InvolvedCompanies     []schema.InvolvedCompany `gorm:"foreignKey:GameID"`
 	Name                  string
 	ParentGame            *Game `gorm:"foreignKey:ParentGameID"`
 	ParentGameID          *uint
+	Platforms             []schema.Platform `gorm:"many2many:game_platforms"`
 	Rating                float64
 	RatingCount           int
-	Remakes               []Game `gorm:"foreignKey:RemakeBaseReference"`
+	ReleaseDates          []schema.ReleaseDate `gorm:"foreignKey:GameID"`
+	Remakes               []Game               `gorm:"foreignKey:RemakeBaseReference"`
 	RemakeBaseReference   *uint
 	Remasters             []Game `gorm:"foreignKey:RemasterBaseReference"`
 	RemasterBaseReference *uint

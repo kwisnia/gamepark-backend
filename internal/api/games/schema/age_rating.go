@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"database/sql"
-
 	"gorm.io/gorm"
 )
 
@@ -21,5 +19,5 @@ type GameAgeRating struct {
 	AgeRating      AgeRating
 	OrganizationID uint
 	Organization   AgeRatingOrganization `gorm:"foreignKey:OrganizationID"`
-	Synopsys       sql.NullString
+	Synopsys       *string
 }
