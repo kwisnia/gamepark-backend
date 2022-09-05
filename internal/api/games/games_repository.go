@@ -1,6 +1,8 @@
 package games
 
 import (
+	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
+	"gorm.io/gorm/clause"
 	"time"
 
 	schema "github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
@@ -39,44 +41,70 @@ type GameVideo struct {
 	GameID uint
 }
 
+//go:generate gomodifytags -file $GOFILE -struct Game -add-tags json -w
+
 type Game struct {
 	gorm.Model
-	AgeRatings            []schema.GameAgeRating `gorm:"foreignKey:GameID"`
-	AggregatedRating      float64
-	AggregatedRatingCount int
-	Artworks              []Artwork    `gorm:"foreignKey:GameID"`
-	Category              GameCategory `gorm:"foreignKey:CategoryID"`
-	CategoryID            uint
-	Cover                 Cover  `gorm:"foreignKey:GameID"`
-	DLCs                  []Game `gorm:"foreignKey:DLCBaseReference"`
-	DLCBaseReference      *uint
-	ExpandedGames         []Game `gorm:"foreignKey:ExpandedGameReference"`
-	ExpandedGameReference *uint
-	Expansions            []Game `gorm:"foreignKey:ExpansionReference"`
-	ExpansionReference    *uint
-	ExternalGames         []schema.ExternalGame `gorm:"foreignKey:GameID"`
-	FirstReleaseDate      time.Time
-	Genres                []Genre                  `gorm:"many2many:game_genres"`
-	InvolvedCompanies     []schema.InvolvedCompany `gorm:"foreignKey:GameID"`
-	Name                  string
-	ParentGame            *Game `gorm:"foreignKey:ParentGameID"`
-	ParentGameID          *uint
-	Platforms             []schema.Platform `gorm:"many2many:game_platforms"`
-	Rating                float64
-	RatingCount           int
-	ReleaseDates          []schema.ReleaseDate `gorm:"foreignKey:GameID"`
-	Remakes               []Game               `gorm:"foreignKey:RemakeBaseReference"`
-	RemakeBaseReference   *uint
-	Remasters             []Game `gorm:"foreignKey:RemasterBaseReference"`
-	RemasterBaseReference *uint
-	Screenshots           []Screenshot `gorm:"foreignKey:GameID"`
-	SimilarGames          []Game       `gorm:"many2many:game_similar_games;"`
-	Slug                  string
-	Storyline             string
-	Summary               string
-	IGDBUrl               string
-	VersionParent         *Game
-	VersionParentID       *uint
-	VersionTitle          string
-	Videos                []GameVideo `gorm:"foreignKey:GameID"`
+	AgeRatings            []schema.GameAgeRating   `gorm:"foreignKey:GameID" json:"age_ratings"`
+	AggregatedRating      float64                  `json:"aggregated_rating"`
+	AggregatedRatingCount int                      `json:"aggregated_rating_count"`
+	Artworks              []Artwork                `gorm:"foreignKey:GameID" json:"artworks"`
+	Category              GameCategory             `gorm:"foreignKey:CategoryID" json:"category"`
+	CategoryID            uint                     `json:"-"`
+	Cover                 Cover                    `gorm:"foreignKey:GameID" json:"cover,omitempty"`
+	DLCs                  []Game                   `gorm:"foreignKey:DLCBaseReference" json:"dlcs"`
+	DLCBaseReference      *uint                    `json:"-"`
+	ExpandedGames         []Game                   `gorm:"foreignKey:ExpandedGameReference" json:"expanded_games"`
+	ExpandedGameReference *uint                    `json:"-"`
+	Expansions            []Game                   `gorm:"foreignKey:ExpansionReference" json:"expansions"`
+	ExpansionReference    *uint                    `json:"-"`
+	ExternalGames         []schema.ExternalGame    `gorm:"foreignKey:GameID" json:"external_games"`
+	FirstReleaseDate      time.Time                `json:"first_release_date"`
+	Genres                []Genre                  `gorm:"many2many:game_genres" json:"genres"`
+	InvolvedCompanies     []schema.InvolvedCompany `gorm:"foreignKey:GameID" json:"involved_companies"`
+	Name                  string                   `json:"name"`
+	ParentGame            *Game                    `gorm:"foreignKey:ParentGameID" json:"parent_game"`
+	ParentGameID          *uint                    `json:"-"`
+	Platforms             []schema.Platform        `gorm:"many2many:game_platforms" json:"platforms"`
+	Rating                float64                  `json:"rating"`
+	RatingCount           int                      `json:"rating_count"`
+	ReleaseDates          []schema.ReleaseDate     `gorm:"foreignKey:GameID" json:"release_dates"`
+	Remakes               []Game                   `gorm:"foreignKey:RemakeBaseReference" json:"remakes"`
+	RemakeBaseReference   *uint                    `json:"-"`
+	Remasters             []Game                   `gorm:"foreignKey:RemasterBaseReference" json:"remasters"`
+	RemasterBaseReference *uint                    `json:"-"`
+	Screenshots           []Screenshot             `gorm:"foreignKey:GameID" json:"screenshots"`
+	SimilarGames          []Game                   `gorm:"many2many:game_similar_games;" json:"similar_games"`
+	Slug                  string                   `json:"slug"`
+	Storyline             string                   `json:"storyline"`
+	Summary               string                   `json:"summary"`
+	IGDBUrl               string                   `json:"igdb_url"`
+	VersionParent         *Game                    `json:"version_parent"`
+	VersionParentID       *uint                    `json:"-"`
+	VersionTitle          string                   `json:"version_title"`
+	Videos                []GameVideo              `gorm:"foreignKey:GameID" json:"videos"`
+}
+
+type GameListElement struct {
+	gorm.Model `json:"-"`
+	Slug       string `json:"slug"`
+	Name       string `json:"name"`
+	Cover      Cover  `gorm:"foreignKey:GameID" json:"cover,omitempty"`
+}
+
+func GetPage(pageSize int, after int) ([]GameListElement, error) {
+	var games []GameListElement
+	if err := database.DB.Preload("Cover").Model(&Game{}).
+		Limit(pageSize).Where("id > ?", after).Find(&games).Error; err != nil {
+		return nil, err
+	}
+	return games, nil
+}
+
+func GetGameBySlug(slug string) (Game, error) {
+	game := Game{}
+	if err := database.DB.Preload(clause.Associations).Where("slug = ?", slug).First(&game).Error; err != nil {
+		return game, err
+	}
+	return game, nil
 }
