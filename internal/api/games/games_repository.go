@@ -1,6 +1,7 @@
 package games
 
 import (
+	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm/clause"
 	"time"
@@ -21,10 +22,12 @@ type Screenshot struct {
 	GameID uint
 }
 
+//go:generate gomodifytags -file $GOFILE -struct Cover -add-tags json -w
+
 type Cover struct {
-	gorm.Model
+	gorm.Model `json:"-"`
 	schema.Image
-	GameID uint
+	GameID uint `json:"-"`
 }
 
 type GameCategory struct {
@@ -87,6 +90,7 @@ type Game struct {
 
 type GameListElement struct {
 	gorm.Model `json:"-"`
+	ID         uint   `json:"id"`
 	Slug       string `json:"slug"`
 	Name       string `json:"name"`
 	Cover      Cover  `gorm:"foreignKey:GameID" json:"cover,omitempty"`
@@ -94,7 +98,9 @@ type GameListElement struct {
 
 func GetPage(pageSize int, after int) ([]GameListElement, error) {
 	var games []GameListElement
+	fmt.Println(after)
 	if err := database.DB.Preload("Cover").Model(&Game{}).
+		Order("id").
 		Limit(pageSize).Where("id > ?", after).Find(&games).Error; err != nil {
 		return nil, err
 	}
@@ -104,6 +110,14 @@ func GetPage(pageSize int, after int) ([]GameListElement, error) {
 func GetGameBySlug(slug string) (Game, error) {
 	game := Game{}
 	if err := database.DB.Preload(clause.Associations).Where("slug = ?", slug).First(&game).Error; err != nil {
+		return game, err
+	}
+	return game, nil
+}
+
+func GetGameById(id uint) (Game, error) {
+	game := Game{}
+	if err := database.DB.Preload(clause.Associations).Where("id = ?", id).First(&game).Error; err != nil {
 		return game, err
 	}
 	return game, nil

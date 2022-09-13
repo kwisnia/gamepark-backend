@@ -6,6 +6,11 @@ import (
 	"strconv"
 )
 
+type GamePage struct {
+	data       []GameListElement
+	nextCursor uint
+}
+
 // get games
 func GetGames(c *gin.Context) {
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
@@ -13,13 +18,20 @@ func GetGames(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
 		return
 	}
-	afterId, err := strconv.Atoi(c.DefaultQuery("afterId", "0"))
+	afterId, err := strconv.Atoi(c.DefaultQuery("after", "0"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid afterId"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid after"})
 		return
 	}
 	games, _ := getGames(pageSize, afterId)
-	c.JSON(http.StatusOK, games)
+	response := GamePage{
+		data:       games,
+		nextCursor: games[len(games)-1].ID,
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data":       response.data,
+		"nextCursor": response.nextCursor,
+	})
 }
 
 // get game by slug
