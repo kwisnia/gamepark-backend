@@ -1,7 +1,6 @@
 package main
 
 import (
-	games "github.com/kwisnia/inzynierka-backend/internal/api/games"
 	gamesSchema "github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config"
@@ -26,11 +25,12 @@ func main() {
 	db.AutoMigrate(&gamesSchema.ReleaseDate{})
 	db.AutoMigrate(&gamesSchema.PlatformLogo{})
 	db.AutoMigrate(&gamesSchema.Platform{})
-	db.AutoMigrate(&games.Artwork{})
-	db.AutoMigrate(&games.GameCategory{})
-	db.AutoMigrate(&games.Cover{})
-	db.AutoMigrate(&games.Screenshot{})
-	db.AutoMigrate(&games.GameVideo{})
-	db.AutoMigrate(&games.Genre{})
-	db.AutoMigrate(&games.Game{})
+	db.AutoMigrate(&gamesSchema.Artwork{})
+	db.AutoMigrate(&gamesSchema.GameCategory{})
+	db.AutoMigrate(&gamesSchema.Cover{})
+	db.AutoMigrate(&gamesSchema.Screenshot{})
+	db.AutoMigrate(&gamesSchema.GameVideo{})
+	db.AutoMigrate(&gamesSchema.Genre{})
+	db.AutoMigrate(&gamesSchema.Game{})
+	db.AutoMigrate(&gamesSchema.GameList{})
 }

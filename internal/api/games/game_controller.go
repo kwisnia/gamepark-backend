@@ -1,6 +1,7 @@
 package games
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -18,20 +19,25 @@ func GetGames(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
 		return
 	}
-	afterId, err := strconv.Atoi(c.DefaultQuery("after", "0"))
-	if err != nil {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid after"})
 		return
 	}
-	games, _ := getGames(pageSize, afterId)
-	response := GamePage{
-		data:       games,
-		nextCursor: games[len(games)-1].ID,
+	filters := c.QueryArray("filters")
+	parsedFilters := make([]int, len(filters))
+	fmt.Println(filters)
+	for i, filter := range filters {
+		parsedFilters[i], err = strconv.Atoi(filter)
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid filter"})
+			return
+		}
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"data":       response.data,
-		"nextCursor": response.nextCursor,
-	})
+	sort := c.DefaultQuery("sort", "id.asc")
+	games, _ := getGames(pageSize, page, parsedFilters, sort)
+	c.JSON(http.StatusOK, games)
 }
 
 // get game by slug

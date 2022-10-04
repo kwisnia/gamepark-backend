@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -10,6 +11,12 @@ import (
 )
 
 const oneYear = time.Hour * 24 * 365
+
+type JwtClaims struct {
+	jwt.RegisteredClaims
+	Username string
+	Exp      int64
+}
 
 func HashAndSalt(pwd string) string {
 	bytePwd := []byte(pwd)
@@ -27,13 +34,14 @@ func ComparePasswords(hashedPwd string, plainPwd string) bool {
 	return err == nil
 }
 
-func CreateToken(email string) (string, error) {
+func CreateToken(username string) (string, error) {
 	config := config_loader.Config
 
 	var err error
-	accessTokenClaims := jwt.MapClaims{}
-	accessTokenClaims["email"] = email
-	accessTokenClaims["exp"] = time.Now().Add(oneYear).Unix()
+	accessTokenClaims := JwtClaims{
+		Username: username,
+		Exp:      time.Now().Add(oneYear).Unix(),
+	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, accessTokenClaims)
 	token, err := accessToken.SignedString([]byte(config.Server.Secret))
 	if err != nil {
@@ -42,13 +50,14 @@ func CreateToken(email string) (string, error) {
 	return token, nil
 }
 
-func ValidateToken(tokenString string) bool {
+func ValidateToken(tokenString string) (*string, bool) {
 	config := config_loader.Config
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	jwtString := strings.Split(tokenString, "Bearer ")[1]
+	token, err := jwt.ParseWithClaims(jwtString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Server.Secret), nil
 	})
 	if err != nil {
-		return false
+		return nil, false
 	}
-	return token.Valid
+	return &token.Claims.(*JwtClaims).Username, token.Valid
 }

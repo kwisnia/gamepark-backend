@@ -10,10 +10,16 @@ import (
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorizationHeader := c.GetHeader("Authorization")
-		if !crypto.ValidateToken(authorizationHeader) {
+		if authorizationHeader == "" {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		userName, valid := crypto.ValidateToken(authorizationHeader)
+		if !valid {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		} else {
+			c.Set("userName", *userName)
 			c.Next()
 		}
 	}

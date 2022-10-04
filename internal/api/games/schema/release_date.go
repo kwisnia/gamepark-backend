@@ -13,14 +13,16 @@ type ReleaseDateCategory struct {
 	EnumCategory
 }
 
+//go:generate gomodifytags -file $GOFILE -struct ReleaseDate -add-tags json -transform camelcase -w
+
 type ReleaseDate struct {
-	gorm.Model
-	GameID     uint
-	Region     ReleaseRegion
-	RegionID   uint
-	Human      string
-	Date       time.Time
-	PlatformID uint
-	Category   ReleaseDateCategory
-	CategoryID uint
+	gorm.Model `json:"-"`
+	GameID     uint                `json:"gameID"`
+	Region     ReleaseRegion       `json:"region"`
+	RegionID   uint                `json:"regionID"`
+	Human      string              `json:"human"`
+	Date       time.Time           `json:"date"`
+	PlatformID uint                `json:"platformID"`
+	Category   ReleaseDateCategory `json:"category"`
+	CategoryID uint                `json:"categoryID"`
 }
