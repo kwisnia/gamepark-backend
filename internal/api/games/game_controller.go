@@ -24,6 +24,7 @@ func GetGames(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid after"})
 		return
 	}
+	search := c.DefaultQuery("search", "")
 	filters := c.QueryArray("filters")
 	parsedFilters := make([]int, len(filters))
 	fmt.Println(filters)
@@ -36,7 +37,7 @@ func GetGames(c *gin.Context) {
 		}
 	}
 	sort := c.DefaultQuery("sort", "id.asc")
-	games, _ := getGames(pageSize, page, parsedFilters, sort)
+	games, _ := getGames(pageSize, page, parsedFilters, sort, search)
 	c.JSON(http.StatusOK, games)
 }
 

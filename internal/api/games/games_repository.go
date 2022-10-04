@@ -15,7 +15,7 @@ type GameListElement struct {
 	Cover      schema.Cover `gorm:"foreignKey:GameID" json:"cover,omitempty"`
 }
 
-func GetPage(pageSize int, offset int, filters []int, order string) ([]GameListElement, error) {
+func GetPage(pageSize int, offset int, filters []int, order string, search string) ([]GameListElement, error) {
 	var games []GameListElement
 	query := database.DB.Preload("Cover").Model(&schema.Game{}).
 		Order(order).
@@ -23,6 +23,7 @@ func GetPage(pageSize int, offset int, filters []int, order string) ([]GameListE
 	if len(filters) > 0 {
 		query = query.Where("category_id IN ?", filters)
 	}
+	query = query.Where("LOWER(name) LIKE ?", "%"+search+"%")
 	if err := query.Find(&games).Error; err != nil {
 		return nil, err
 	}

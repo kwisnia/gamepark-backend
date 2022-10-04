@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-func getGames(pageSize int, page int, filters []int, sort string) ([]GameListElement, error) {
+func getGames(pageSize int, page int, filters []int, sort string, search string) ([]GameListElement, error) {
 	parsedSort := strings.Replace(sort, ".", " ", -1)
 	offset := (page - 1) * pageSize
-	games, err := GetPage(pageSize, offset, filters, parsedSort)
+	games, err := GetPage(pageSize, offset, filters, parsedSort, search)
 	if err != nil {
 		return nil, err
 	}
