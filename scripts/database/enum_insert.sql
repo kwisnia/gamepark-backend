@@ -110,3 +110,10 @@ values ('europe', 1),
        ('worldwide', 8),
        ('korea', 9),
        ('brazil', 10);
+
+insert into game_completions
+    (name, id)
+values ('main_story', 0),
+       ('main_and_extras', 1),
+       ('completionist', 2),
+       ('dropped', 3);

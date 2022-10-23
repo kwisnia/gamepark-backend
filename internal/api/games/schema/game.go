@@ -49,7 +49,7 @@ type Game struct {
 	RemasterBaseReference *uint             `json:"-"`
 	Screenshots           []Screenshot      `gorm:"foreignKey:GameID" json:"screenshots"`
 	SimilarGames          []Game            `gorm:"many2many:game_similar_games;" json:"similarGames"`
-	Slug                  string            `json:"slug"`
+	Slug                  string            `json:"slug" gorm:"unique"`
 	Storyline             string            `json:"storyline"`
 	Summary               string            `json:"summary"`
 	IGDBUrl               string            `json:"igdbUrl"`
@@ -58,6 +58,7 @@ type Game struct {
 	VersionTitle          string            `json:"versionTitle"`
 	Videos                []GameVideo       `gorm:"foreignKey:GameID" json:"videos"`
 	Lists                 []GameList        `gorm:"many2many:list_games" json:"lists"`
+	Reviews               []GameReview      `gorm:"foreignKey:Game;references:Slug" json:"reviews"`
 }
 
 type GameList struct {

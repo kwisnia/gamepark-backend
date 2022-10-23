@@ -1,7 +1,6 @@
 package lists
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -136,12 +135,4 @@ func UpdateList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, list)
-}
-
-func GetUserGameInfo(c *gin.Context) {
-	slug := c.Param("slug")
-	userName := c.GetString("userName")
-	gameUserInfo, _ := getUserGameInfo(slug, userName)
-	fmt.Println(gameUserInfo)
-	c.JSON(http.StatusOK, gameUserInfo)
 }

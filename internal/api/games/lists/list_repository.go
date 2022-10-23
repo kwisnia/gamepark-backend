@@ -67,7 +67,7 @@ func GetGames(l *schema.GameList) ([]games.GameListElement, error) {
 }
 
 func GetUsersListsWhereGameIs(gameId uint, userName string) ([]schema.GameList, error) {
-	var l []schema.GameList
+	l := make([]schema.GameList, 0)
 	if err := database.DB.Model(&schema.GameList{}).Joins(
 		"LEFT JOIN list_games ON list_games.game_list_id = game_lists.id",
 	).Where("game_lists.owner = ? AND list_games.game_id = ?", userName, gameId).Scan(&l).Error; err != nil {

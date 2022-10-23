@@ -92,36 +92,21 @@ func LoginUser(c *gin.Context) {
 
 func GetDetails(c *gin.Context) {
 	userName := c.GetString("userName")
-	user := GetByUsername(userName)
+	user := GetUserDetails(userName)
 	if user == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
 	}
-	c.JSON(http.StatusOK, DetailsResponse{
-		Email:       user.Email,
-		Username:    user.Username,
-		FirstName:   user.UserProfile.FirstName,
-		LastName:    user.UserProfile.LastName,
-		DisplayName: user.UserProfile.DisplayName,
-		ID:          user.ID,
-		Lists:       user.Lists,
-	})
+	c.JSON(http.StatusOK, user)
 }
 
-func GetDetailsByUsername(c *gin.Context) {
+func GetDetailsByUsernameHandler(c *gin.Context) {
 	userName := c.Param("userName")
-	user := GetByUsername(userName)
+	user := GetUserDetails(userName)
 	if user == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
 	}
-	c.JSON(http.StatusOK, DetailsResponse{
-		Email:       user.Email,
-		Username:    user.Username,
-		FirstName:   user.UserProfile.FirstName,
-		LastName:    user.UserProfile.LastName,
-		DisplayName: user.UserProfile.DisplayName,
-		ID:          user.ID,
-		Lists:       user.Lists,
-	})
+	user.Email = ""
+	c.JSON(http.StatusOK, user)
 }

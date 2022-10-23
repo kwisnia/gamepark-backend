@@ -2,7 +2,6 @@ package lists
 
 import (
 	"errors"
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
 )
@@ -13,12 +12,7 @@ type GameListDetails struct {
 	Games       []games.GameListElement `json:"games"`
 }
 
-type UserGameDetails struct {
-	Lists []schema.GameList `json:"lists"`
-}
-
 func getUserLists(userName string) ([]schema.GameList, error) {
-	fmt.Println(userName)
 	lists, err := GetByOwnerUsername(userName)
 	if err != nil {
 		return nil, err
@@ -114,19 +108,4 @@ func deleteGameFromList(listId int, gameSlug string, requestingUser string) erro
 		return err
 	}
 	return nil
-}
-
-func getUserGameInfo(slug string, userName string) (*UserGameDetails, error) {
-	game, err := games.GetGameBySlug(slug)
-	if err != nil {
-		return nil, err
-	}
-	listsWhereGameIs, err := GetUsersListsWhereGameIs(game.ID, userName)
-	fmt.Println(listsWhereGameIs)
-	if err != nil {
-		return nil, err
-	}
-	return &UserGameDetails{
-		Lists: listsWhereGameIs,
-	}, nil
 }

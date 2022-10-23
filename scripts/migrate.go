@@ -33,4 +33,7 @@ func main() {
 	db.AutoMigrate(&gamesSchema.Genre{})
 	db.AutoMigrate(&gamesSchema.Game{})
 	db.AutoMigrate(&gamesSchema.GameList{})
+	db.AutoMigrate(&gamesSchema.GameCompletion{})
+	db.AutoMigrate(&gamesSchema.GameReview{})
+	db.AutoMigrate(&gamesSchema.ReviewHelpful{})
 }

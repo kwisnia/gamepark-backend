@@ -24,3 +24,18 @@ func AuthRequired() gin.HandlerFunc {
 		}
 	}
 }
+
+func AuthOptional() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authorizationHeader := c.GetHeader("Authorization")
+		if authorizationHeader == "" {
+			c.Next()
+			return
+		}
+		userName, valid := crypto.ValidateToken(authorizationHeader)
+		if valid {
+			c.Set("userName", *userName)
+		}
+		c.Next()
+	}
+}

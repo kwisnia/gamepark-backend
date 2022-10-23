@@ -27,7 +27,6 @@ func GetGames(c *gin.Context) {
 	search := c.DefaultQuery("search", "")
 	filters := c.QueryArray("filters")
 	parsedFilters := make([]int, len(filters))
-	fmt.Println(filters)
 	for i, filter := range filters {
 		parsedFilters[i], err = strconv.Atoi(filter)
 		if err != nil {
