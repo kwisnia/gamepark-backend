@@ -44,3 +44,11 @@ func GetByUsername(username string) *User {
 	}
 	return &u
 }
+
+func GetByID(id uint) *User {
+	var u User
+	if err := database.DB.Preload("UserProfile").Preload("Lists").Where("id = ?", id).First(&u).Error; err != nil {
+		return nil
+	}
+	return &u
+}

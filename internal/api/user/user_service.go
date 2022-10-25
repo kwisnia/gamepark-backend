@@ -33,3 +33,15 @@ func GetBasicUserDetails(userName string) *BasicUserDetails {
 		ID:          user.ID,
 	}
 }
+
+func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
+	user := GetByID(userID)
+	if user == nil {
+		return nil
+	}
+	return &BasicUserDetails{
+		Username:    user.Username,
+		DisplayName: user.UserProfile.DisplayName,
+		ID:          user.ID,
+	}
+}
