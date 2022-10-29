@@ -10,14 +10,15 @@ import (
 )
 
 type PostForm struct {
-	content        string
-	originalPostID *uint
+	Body           string
+	OriginalPostID *uint
 }
 
 type PostWithUserDetails struct {
 	schema.DiscussionPost
-	User  user.BasicUserDetails `json:"user"`
-	Score int                   `json:"score"`
+	User       user.BasicUserDetails `json:"user"`
+	UserScore  int                   `json:"userScore"`
+	ReplyCount int64                 `json:"replyCount"`
 }
 
 var policy = bluemonday.UGCPolicy()
@@ -28,19 +29,19 @@ func CreatePost(userID uint, discussionID uint, postForm PostForm) (*schema.Disc
 		return nil, fmt.Errorf("user not found")
 	}
 	post := schema.DiscussionPost{
-		Body:           policy.Sanitize(postForm.content),
+		Body:           policy.Sanitize(postForm.Body),
 		DiscussionID:   discussionID,
 		CreatorID:      userID,
-		OriginalPostID: postForm.originalPostID,
+		OriginalPostID: postForm.OriginalPostID,
 	}
-	if err := Save(&post); err != nil {
+	if err := SaveNewPost(&post); err != nil {
 		return nil, err
 	}
 	return &post, nil
 }
 
-func GetPostsForDiscussion(pageSize int, page int, discussionID uint) ([]PostWithUserDetails, error) {
-	posts, err := GetByDiscussionID(discussionID, pageSize, page)
+func GetPostsForDiscussion(pageSize int, page int, discussionID uint, userID uint) ([]PostWithUserDetails, error) {
+	posts, err := GetWithoutRepliesByDiscussionID(discussionID, pageSize, (page-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +51,56 @@ func GetPostsForDiscussion(pageSize int, page int, discussionID uint) ([]PostWit
 		if userDetails == nil {
 			return nil, fmt.Errorf("user not found")
 		}
-		score, err := GetScoreByUserAndPost(userDetails.ID, post.ID)
+		score, err := GetScoreByUserAndPost(userID, post.ID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		scoreValue := 0
+		if score != nil {
+			scoreValue = score.Score
+		}
+		repliesCount, err := GetReplyCountForPost(post.ID)
 		if err != nil {
 			return nil, err
 		}
 		postsWithUserDetails[i] = PostWithUserDetails{
 			DiscussionPost: post,
 			User:           *userDetails,
-			Score:          score.Score,
+			UserScore:      scoreValue,
+			ReplyCount:     repliesCount,
+		}
+	}
+	return postsWithUserDetails, nil
+}
+
+func GetPostReplies(pageSize int, page int, postID uint, userID uint) ([]PostWithUserDetails, error) {
+	posts, err := GetRepliesForPost(postID, pageSize, (page-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	postsWithUserDetails := make([]PostWithUserDetails, len(posts))
+	for i, post := range posts {
+		userDetails := user.GetBasicUserDetailsByID(post.CreatorID)
+		if userDetails == nil {
+			return nil, fmt.Errorf("user not found")
+		}
+		score, err := GetScoreByUserAndPost(userID, post.ID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		scoreValue := 0
+		if score != nil {
+			scoreValue = score.Score
+		}
+		repliesCount, err := GetReplyCountForPost(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		postsWithUserDetails[i] = PostWithUserDetails{
+			DiscussionPost: post,
+			User:           *userDetails,
+			UserScore:      scoreValue,
+			ReplyCount:     repliesCount,
 		}
 	}
 	return postsWithUserDetails, nil
@@ -90,8 +133,8 @@ func UpdatePost(id uint, userID uint, postForm PostForm) (*schema.DiscussionPost
 	if post.CreatorID != userID {
 		return nil, fmt.Errorf("user is not the creator of this post")
 	}
-	post.Body = policy.Sanitize(postForm.content)
-	if err := Save(post); err != nil {
+	post.Body = policy.Sanitize(postForm.Body)
+	if err := Update(post); err != nil {
 		return nil, err
 	}
 	return post, nil
@@ -121,6 +164,9 @@ func ScorePost(userID uint, postID uint, score int) error {
 		err = DeleteScore(scoredPost)
 		if err != nil {
 			return err
+		}
+		if scoredPost.Score == score {
+			return nil
 		}
 	}
 	err = CreatePostScore(&schema.PostScore{

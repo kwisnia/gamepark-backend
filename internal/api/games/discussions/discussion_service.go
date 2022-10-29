@@ -3,19 +3,29 @@ package discussions
 import (
 	"errors"
 	"fmt"
+	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions/posts"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 	"gorm.io/gorm"
 )
 
 type DiscussionForm struct {
-	title string
+	Title string
+	Body  string
+}
+
+type DiscussionListItemWithUserDetails struct {
+	GameDiscussionListItem
+	User       user.BasicUserDetails `json:"user"`
+	UserScore  int                   `json:"userScore"`
+	PostsCount int64                 `json:"postsCount"`
 }
 
 type DiscussionWithUserDetails struct {
 	schema.GameDiscussion
-	User  user.BasicUserDetails `json:"user"`
-	Score int                   `json:"score"`
+	User       user.BasicUserDetails `json:"user"`
+	UserScore  int                   `json:"userScore"`
+	PostsCount int64                 `json:"postsCount"`
 }
 
 func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (*schema.GameDiscussion, error) {
@@ -24,7 +34,8 @@ func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (
 		return nil, fmt.Errorf("user not found")
 	}
 	discussion := schema.GameDiscussion{
-		Title:     discussionForm.title,
+		Title:     discussionForm.Title,
+		Body:      discussionForm.Body,
 		Game:      game,
 		CreatorID: userID,
 	}
@@ -39,43 +50,74 @@ func GetDiscussionsForUser(pageSize int, page int, userID uint) ([]schema.GameDi
 	if discussionCreator == nil {
 		return nil, fmt.Errorf("user not found")
 	}
-	discussions, err := GetByUserID(userID, pageSize, page)
+	discussions, err := GetByUserID(userID, pageSize, (page-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return discussions, nil
 }
 
-func GetDiscussionsForGame(pageSize int, page int, game string) ([]schema.GameDiscussion, error) {
-	discussions, err := GetByGameSlug(game, pageSize, page)
+func GetDiscussionsForGame(pageSize int, page int, game string, userID uint) ([]DiscussionListItemWithUserDetails, error) {
+	discussions, err := GetByGameSlug(game, pageSize, (page-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}
-	discussionsWithUserDetails := make([]DiscussionWithUserDetails, len(discussions))
+	discussionsWithUserDetails := make([]DiscussionListItemWithUserDetails, len(discussions))
 	for i, discussion := range discussions {
 		userDetails := user.GetBasicUserDetailsByID(discussion.CreatorID)
 		if userDetails == nil {
 			return nil, fmt.Errorf("user not found")
 		}
-		score, err := GetScoreByUserAndDiscussion(userDetails.ID, discussion.ID)
+		score, err := GetScoreByUserAndDiscussion(userID, discussion.ID)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
-		discussionsWithUserDetails[i] = DiscussionWithUserDetails{
-			GameDiscussion: discussion,
-			User:           *userDetails,
-			Score:          score.Score,
+		scoreValue := 0
+		if score != nil {
+			scoreValue = score.Score
+		}
+		postsCount, err := posts.GetPostsCountForDiscussion(discussion.ID)
+		if err != nil {
+			return nil, err
+		}
+		discussionsWithUserDetails[i] = DiscussionListItemWithUserDetails{
+			GameDiscussionListItem: discussion,
+			User:                   *userDetails,
+			UserScore:              scoreValue,
+			PostsCount:             postsCount,
 		}
 	}
-	return discussions, nil
+	return discussionsWithUserDetails, nil
 }
 
-func GetDiscussionByID(id uint) (*schema.GameDiscussion, error) {
+func GetDiscussionByID(id uint, userID uint) (*DiscussionWithUserDetails, error) {
 	discussion, err := GetByID(id)
 	if err != nil {
 		return nil, err
 	}
-	return discussion, nil
+	userDetails := user.GetBasicUserDetailsByID(discussion.CreatorID)
+	if userDetails == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	score, err := GetScoreByUserAndDiscussion(userID, discussion.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	scoreValue := 0
+	if score != nil {
+		scoreValue = score.Score
+	}
+	postsCount, err := posts.GetPostsCountForDiscussion(discussion.ID)
+	if err != nil {
+		return nil, err
+	}
+	discussionWithUserDetails := DiscussionWithUserDetails{
+		GameDiscussion: *discussion,
+		User:           *userDetails,
+		UserScore:      scoreValue,
+		PostsCount:     postsCount,
+	}
+	return &discussionWithUserDetails, nil
 }
 
 func DeleteDiscussion(id uint, userID uint) error {
@@ -114,9 +156,12 @@ func ScoreDiscussion(userID uint, discussionID uint, score int) error {
 		return err
 	}
 	if scoredDiscussion != nil {
-		err = DeleteScore(userID, discussionID)
+		err = DeleteScore(scoredDiscussion)
 		if err != nil {
 			return err
+		}
+		if scoredDiscussion.Score == score {
+			return nil
 		}
 	}
 	err = CreateDiscussionScore(&schema.DiscussionScore{
@@ -127,9 +172,6 @@ func ScoreDiscussion(userID uint, discussionID uint, score int) error {
 	return nil
 }
 
-func DeleteScore(userID uint, discussionID uint) error {
-	return RemoveDiscussionScore(&schema.DiscussionScore{
-		DiscussionID: discussionID,
-		UserID:       userID,
-	})
+func DeleteScore(score *schema.DiscussionScore) error {
+	return RemoveDiscussionScore(score)
 }

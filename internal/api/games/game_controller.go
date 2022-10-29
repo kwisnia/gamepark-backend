@@ -1,8 +1,10 @@
 package games
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 )
@@ -13,7 +15,7 @@ type GamePage struct {
 }
 
 // get games
-func GetGames(c *gin.Context) {
+func GetGamesHandler(c *gin.Context) {
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
@@ -36,13 +38,26 @@ func GetGames(c *gin.Context) {
 		}
 	}
 	sort := c.DefaultQuery("sort", "id.asc")
-	games, _ := getGames(pageSize, page, parsedFilters, sort, search)
+	games, _ := GetGames(pageSize, page, parsedFilters, sort, search)
 	c.JSON(http.StatusOK, games)
 }
 
 // get game by slug
-func GetGame(c *gin.Context) {
+func GetGameHandler(c *gin.Context) {
 	slug := c.Param("slug")
-	game, _ := getBySlug(slug)
+	game, _ := GetBySlug(slug)
+	c.JSON(http.StatusOK, game)
+}
+
+func GetGameShortInfoHandler(c *gin.Context) {
+	slug := c.Param("slug")
+	game, err := GetShortInfoBySlug(slug)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Game not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "An error occurred"})
+	}
 	c.JSON(http.StatusOK, game)
 }

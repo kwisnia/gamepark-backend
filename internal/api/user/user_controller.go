@@ -56,12 +56,12 @@ func RegisterUser(c *gin.Context) {
 			DisplayName: form.DisplayName,
 		},
 	}
-	token, err := crypto.CreateToken(user.Username)
+	Save(user)
+	token, err := crypto.CreateToken(user.Username, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	Save(user)
 	c.Header("Authorization", token)
 	c.JSON(http.StatusCreated, gin.H{"email": user.Email})
 }
@@ -81,7 +81,7 @@ func LoginUser(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid password"})
 		return
 	}
-	token, err := crypto.CreateToken(user.Username)
+	token, err := crypto.CreateToken(user.Username, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

@@ -52,12 +52,10 @@ func GetGameById(id uint) (schema.Game, error) {
 	return game, nil
 }
 
-//
-//func UpdateGameRating(gameSlug string, newScore float64) {
-//	database.DB.Model(&schema.Game{}).Where("slug = ?", gameSlug).Updates(
-//		map[string]any{
-//			"rating":       gorm.Expr("(rating_count * rating + ?) / (rating_count + 1)", newScore),
-//			"rating_count": gorm.Expr("rating_count + ?", 1),
-//		},
-//	)
-//}
+func GetGameShortInfoBySlug(slug string) (GameListElement, error) {
+	game := GameListElement{}
+	if err := database.DB.Model(&schema.Game{}).Preload("Cover").Where("slug = ?", slug).First(&game).Error; err != nil {
+		return game, err
+	}
+	return game, nil
+}

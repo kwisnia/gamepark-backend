@@ -36,4 +36,8 @@ func main() {
 	db.AutoMigrate(&gamesSchema.GameCompletion{})
 	db.AutoMigrate(&gamesSchema.GameReview{})
 	db.AutoMigrate(&gamesSchema.ReviewHelpful{})
+	db.AutoMigrate(&gamesSchema.GameDiscussion{})
+	db.AutoMigrate(&gamesSchema.DiscussionScore{})
+	db.AutoMigrate(&gamesSchema.DiscussionPost{})
+	db.AutoMigrate(&gamesSchema.PostScore{})
 }

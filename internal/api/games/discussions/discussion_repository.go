@@ -7,6 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type GameDiscussionListItem struct {
+	ID        uint   `gorm:"primarykey" json:"id"`
+	Title     string `json:"title"`
+	Game      string `json:"game"`
+	Score     int    `json:"score"`
+	CreatorID uint   `json:"creator_id"`
+}
+
 func Save(r *schema.GameDiscussion) error {
 	if err := database.DB.Create(r).Error; err != nil {
 		return err
@@ -16,7 +24,7 @@ func Save(r *schema.GameDiscussion) error {
 
 func GetPageQuery(pageSize int, offset int) *gorm.DB {
 	fmt.Println(offset)
-	query := database.DB.Preload("Platform").Model(&schema.GameReview{}).
+	query := database.DB.Model(&schema.GameDiscussion{}).
 		Limit(pageSize).Offset(offset).Order("created_at ASC")
 
 	return query
@@ -30,8 +38,8 @@ func GetByID(id uint) (*schema.GameDiscussion, error) {
 	return &r, nil
 }
 
-func GetByGameSlug(slug string, pageSize int, offset int) ([]schema.GameDiscussion, error) {
-	var discussions []schema.GameDiscussion
+func GetByGameSlug(slug string, pageSize int, offset int) ([]GameDiscussionListItem, error) {
+	var discussions []GameDiscussionListItem
 	query := GetPageQuery(pageSize, offset)
 	if err := query.Where("game = ?", slug).Find(&discussions).Error; err != nil {
 		return nil, err

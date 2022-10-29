@@ -15,6 +15,7 @@ const oneYear = time.Hour * 24 * 365
 type JwtClaims struct {
 	jwt.RegisteredClaims
 	Username string
+	UserID   uint
 	Exp      int64
 }
 
@@ -34,13 +35,14 @@ func ComparePasswords(hashedPwd string, plainPwd string) bool {
 	return err == nil
 }
 
-func CreateToken(username string) (string, error) {
+func CreateToken(username string, userID uint) (string, error) {
 	config := config_loader.Config
 
 	var err error
 	accessTokenClaims := JwtClaims{
 		Username: username,
 		Exp:      time.Now().Add(oneYear).Unix(),
+		UserID:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, accessTokenClaims)
 	token, err := accessToken.SignedString([]byte(config.Server.Secret))
@@ -50,14 +52,14 @@ func CreateToken(username string) (string, error) {
 	return token, nil
 }
 
-func ValidateToken(tokenString string) (*string, bool) {
+func ValidateToken(tokenString string) (*string, *uint, bool) {
 	config := config_loader.Config
 	jwtString := strings.Split(tokenString, "Bearer ")[1]
 	token, err := jwt.ParseWithClaims(jwtString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Server.Secret), nil
 	})
 	if err != nil {
-		return nil, false
+		return nil, nil, false
 	}
-	return &token.Claims.(*JwtClaims).Username, token.Valid
+	return &token.Claims.(*JwtClaims).Username, &token.Claims.(*JwtClaims).UserID, token.Valid
 }

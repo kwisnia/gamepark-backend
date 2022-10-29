@@ -11,11 +11,12 @@ type GameDiscussion struct {
 	UpdatedAt time.Time         `json:"-"`
 	DeletedAt gorm.DeletedAt    `gorm:"index" json:"-"`
 	Title     string            `json:"title"`
+	Body      string            `json:"body"`
 	Game      string            `json:"game"`
 	Score     int               `json:"score"`
 	CreatorID uint              `json:"-"`
 	Scores    []DiscussionScore `gorm:"foreignKey:DiscussionID" json:"-"`
-	Posts     []DiscussionPost  `gorm:"foreignKey:DiscussionID" json:"posts"`
+	Posts     []DiscussionPost  `gorm:"foreignKey:DiscussionID" json:"-"`
 }
 
 type DiscussionScore struct {
@@ -32,7 +33,7 @@ func (h *DiscussionScore) AfterCreate(tx *gorm.DB) error {
 }
 
 func (h *DiscussionScore) AfterDelete(tx *gorm.DB) error {
-	err := tx.Model(&GameReview{}).Where("id = ?", h.DiscussionID).Updates(map[string]any{
+	err := tx.Model(&GameDiscussion{}).Where("id = ?", h.DiscussionID).Updates(map[string]any{
 		"score": gorm.Expr("score + ?", h.Score*-1),
 	}).Error
 	return err
@@ -48,7 +49,7 @@ type DiscussionPost struct {
 	DiscussionID   uint             `json:"-"`
 	Score          int              `json:"score"`
 	Scores         []PostScore      `gorm:"foreignKey:PostID" json:"-"`
-	OriginalPostID *uint            `json:"-"`
+	OriginalPostID *uint            `json:"originalPostID"`
 	Replies        []DiscussionPost `gorm:"foreignKey:OriginalPostID" json:"-"`
 }
 
@@ -59,14 +60,14 @@ type PostScore struct {
 }
 
 func (h *PostScore) AfterCreate(tx *gorm.DB) error {
-	err := tx.Model(&GameDiscussion{}).Where("id = ?", h.PostID).Updates(map[string]any{
+	err := tx.Model(&DiscussionPost{}).Where("id = ?", h.PostID).Updates(map[string]any{
 		"score": gorm.Expr("score + ?", h.Score),
 	}).Error
 	return err
 }
 
 func (h *PostScore) AfterDelete(tx *gorm.DB) error {
-	err := tx.Model(&GameReview{}).Where("id = ?", h.PostID).Updates(map[string]any{
+	err := tx.Model(&DiscussionPost{}).Where("id = ?", h.PostID).Updates(map[string]any{
 		"score": gorm.Expr("score + ?", h.Score*-1),
 	}).Error
 	return err

@@ -14,12 +14,13 @@ func AuthRequired() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		userName, valid := crypto.ValidateToken(authorizationHeader)
+		userName, userID, valid := crypto.ValidateToken(authorizationHeader)
 		if !valid {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		} else {
 			c.Set("userName", *userName)
+			c.Set("userID", *userID)
 			c.Next()
 		}
 	}
@@ -32,9 +33,10 @@ func AuthOptional() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		userName, valid := crypto.ValidateToken(authorizationHeader)
+		userName, userID, valid := crypto.ValidateToken(authorizationHeader)
 		if valid {
 			c.Set("userName", *userName)
+			c.Set("userID", *userID)
 		}
 		c.Next()
 	}

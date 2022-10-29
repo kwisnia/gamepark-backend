@@ -6,15 +6,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func Save(r *schema.DiscussionPost) error {
+func SaveNewPost(r *schema.DiscussionPost) error {
 	if err := database.DB.Create(r).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
+func Update(r *schema.DiscussionPost) error {
+	return database.DB.Save(r).Error
+}
+
 func GetPageQuery(pageSize int, offset int) *gorm.DB {
-	query := database.DB.Preload("Platform").Model(&schema.GameReview{}).
+	query := database.DB.Model(&schema.DiscussionPost{}).
 		Limit(pageSize).Offset(offset).Order("created_at ASC")
 
 	return query
@@ -28,13 +32,38 @@ func GetByID(id uint) (*schema.DiscussionPost, error) {
 	return &r, nil
 }
 
-func GetByDiscussionID(discussionID uint, pageSize int, offset int) ([]schema.DiscussionPost, error) {
+func GetWithoutRepliesByDiscussionID(discussionID uint, pageSize int, offset int) ([]schema.DiscussionPost, error) {
 	var posts []schema.DiscussionPost
 	query := GetPageQuery(pageSize, offset)
-	if err := query.Where("discussion_id = ?", discussionID).Find(&posts).Error; err != nil {
+	if err := query.Where("discussion_id = ?", discussionID).Where("original_post_id is null").Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
+}
+
+func GetReplyCountForPost(postID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.DiscussionPost{}).Where("original_post_id = ?", postID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func GetRepliesForPost(postID uint, pageSize int, offset int) ([]schema.DiscussionPost, error) {
+	var posts []schema.DiscussionPost
+	query := GetPageQuery(pageSize, offset)
+	if err := query.Where("original_post_id = ?", postID).Find(&posts).Error; err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func GetPostsCountForDiscussion(discussionID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.DiscussionPost{}).Where("discussion_id = ?", discussionID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func GetByUserID(userID uint, pageSize int, offset int) ([]schema.DiscussionPost, error) {
