@@ -22,10 +22,9 @@ func CreateReviewHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println(form.PlatformID)
-	username := c.GetString("userName")
+	userID := c.GetUint("userID")
 	gameSlug := c.Param("slug")
-	review, err := CreateReview(username, gameSlug, form)
+	review, err := CreateReview(userID, gameSlug, form)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -34,13 +33,13 @@ func CreateReviewHandler(c *gin.Context) {
 }
 
 func GetReviewHandler(c *gin.Context) {
-	username := c.GetString("userName")
-	reviewId, err := strconv.Atoi(c.Param("reviewId"))
+	userID := c.GetUint("userID")
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid review id"})
 		return
 	}
-	review, err := GetReview(uint(reviewId), username)
+	review, err := GetReview(uint(reviewID), userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -49,9 +48,9 @@ func GetReviewHandler(c *gin.Context) {
 }
 
 func DeleteReviewHandler(c *gin.Context) {
-	username := c.GetString("userName")
+	userID := c.GetUint("userID")
 	slug := c.Param("slug")
-	err := DeleteReview(username, slug)
+	err := DeleteReview(userID, slug)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -61,7 +60,7 @@ func DeleteReviewHandler(c *gin.Context) {
 
 func GetReviewsForGameHandler(c *gin.Context) {
 	gameSlug := c.Param("slug")
-	userName := c.GetString("userName")
+	userID := c.GetUint("userID")
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
@@ -82,7 +81,7 @@ func GetReviewsForGameHandler(c *gin.Context) {
 			return
 		}
 	}
-	reviews, err := GetReviewsForGame(pageSize, page, parsedFilters, gameSlug, userName)
+	reviews, err := GetReviewsForGame(pageSize, page, parsedFilters, gameSlug, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -91,7 +90,7 @@ func GetReviewsForGameHandler(c *gin.Context) {
 }
 
 func GetReviewsForUserHandler(c *gin.Context) {
-	username := c.GetString("userName")
+	username := c.Param("username")
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
@@ -117,13 +116,13 @@ func GetReviewsForUserHandler(c *gin.Context) {
 }
 
 func MarkReviewAsHelpfulHandler(c *gin.Context) {
-	username := c.GetString("userName")
-	reviewId, err := strconv.Atoi(c.Param("reviewId"))
+	userID := c.GetUint("userID")
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid review id"})
 		return
 	}
-	err = MarkReviewAsHelpful(username, uint(reviewId))
+	err = MarkReviewAsHelpful(userID, uint(reviewID))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -132,13 +131,13 @@ func MarkReviewAsHelpfulHandler(c *gin.Context) {
 }
 
 func UnmarkReviewAsHelpfulHandler(c *gin.Context) {
-	username := c.GetString("userName")
-	reviewId, err := strconv.Atoi(c.Param("reviewId"))
+	userID := c.GetUint("userID")
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid review id"})
 		return
 	}
-	err = UnmarkReviewAsHelpful(username, uint(reviewId))
+	err = UnmarkReviewAsHelpful(userID, uint(reviewID))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

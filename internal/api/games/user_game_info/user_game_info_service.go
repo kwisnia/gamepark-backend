@@ -15,21 +15,21 @@ type UserGameDetails struct {
 	Review *reviews.ReviewWithUserDetails `json:"review"`
 }
 
-func GetUserGameInfo(slug string, userName string) (*UserGameDetails, error) {
+func GetUserGameInfo(slug string, userID uint) (*UserGameDetails, error) {
 	game, err := games.GetGameBySlug(slug)
 	if err != nil {
 		return nil, err
 	}
-	listsWhereGameIs, err := lists.GetUsersListsWhereGameIs(game.ID, userName)
+	listsWhereGameIs, err := lists.GetUsersListsWhereGameIs(game.ID, userID)
 	if err != nil {
 		return nil, err
 	}
-	userGameReview, err := reviews.GetUserGameReview(game.Slug, userName)
+	userGameReview, err := reviews.GetUserGameReview(game.Slug, userID)
 	if err != nil {
 		return nil, err
 	}
-	userDetails := user.GetBasicUserDetails(userName)
-	_, err = reviews.GetHelpfulByUserAndReview(userName, userGameReview.ID)
+	userDetails := user.GetBasicUserDetailsByID(userID)
+	_, err = reviews.GetHelpfulByUserAndReview(userID, userGameReview.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}

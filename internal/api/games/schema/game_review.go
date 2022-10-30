@@ -22,7 +22,7 @@ type GameReview struct {
 	GameCompletionID uint            `json:"gameCompletionID"`
 	GameCompletion   GameCompletion  `gorm:"foreignKey:GameCompletionID" json:"-"`
 	Title            string          `json:"title"`
-	Creator          string          `json:"creator"`
+	Creator          uint            `json:"creator"`
 	ContainsSpoilers bool            `json:"containsSpoilers"`
 	Body             string          `json:"body"`
 	Game             string          `json:"game"`
@@ -47,7 +47,7 @@ func (r *GameReview) AfterDelete(tx *gorm.DB) error {
 
 type ReviewHelpful struct {
 	ReviewID uint
-	Username string
+	UserID   uint
 }
 
 func (h *ReviewHelpful) AfterCreate(tx *gorm.DB) error {

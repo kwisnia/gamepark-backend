@@ -15,20 +15,20 @@ type ReviewWithUserDetails struct {
 	MarkedAsHelpful bool                  `json:"markedAsHelpful"`
 }
 
-func CreateReview(username string, gameSlug string, form ReviewForm) (*schema.GameReview, error) {
+func CreateReview(userID uint, gameSlug string, form ReviewForm) (*schema.GameReview, error) {
 	_, err := games.GetGameBySlug(gameSlug)
 	if err != nil {
 		return nil, err
 	}
-	check := user.GetByUsername(username)
+	check := user.GetByID(userID)
 	if check == nil {
 		return nil, err
 	}
-	review, err := GetByGameAndUser(gameSlug, username)
+	review, err := GetByGameAndUser(gameSlug, userID)
 	if err != nil {
 		review = &schema.GameReview{
 			Game:             gameSlug,
-			Creator:          username,
+			Creator:          userID,
 			Rating:           form.Rating,
 			Title:            form.Title,
 			Body:             form.Body,
@@ -53,14 +53,18 @@ func CreateReview(username string, gameSlug string, form ReviewForm) (*schema.Ga
 }
 
 func GetReviewsForUser(pageSize int, page int, filters []int, username string) ([]schema.GameReview, error) {
-	userReviews, err := GetByUserUsername(username, pageSize, page, filters)
+	userCheck := user.GetByUsername(username)
+	if userCheck == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	userReviews, err := GetByUserID(userCheck.ID, pageSize, page, filters)
 	if err != nil {
 		return nil, err
 	}
 	return userReviews, nil
 }
 
-func GetReviewsForGame(pageSize int, page int, filters []int, gameSlug string, userName string) ([]ReviewWithUserDetails, error) {
+func GetReviewsForGame(pageSize int, page int, filters []int, gameSlug string, userID uint) ([]ReviewWithUserDetails, error) {
 	offset := (page - 1) * pageSize
 	gameReviews, err := GetByGameSlug(gameSlug, pageSize, offset, filters)
 	if err != nil {
@@ -69,11 +73,11 @@ func GetReviewsForGame(pageSize int, page int, filters []int, gameSlug string, u
 	reviewsWithUserDetails := make([]ReviewWithUserDetails, len(gameReviews))
 
 	for i, review := range gameReviews {
-		userDetails := user.GetBasicUserDetails(review.Creator)
+		userDetails := user.GetBasicUserDetailsByID(review.Creator)
 		if userDetails == nil {
 			return nil, err
 		}
-		_, err := GetHelpfulByUserAndReview(userName, review.ID)
+		_, err := GetHelpfulByUserAndReview(userID, review.ID)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
@@ -86,24 +90,24 @@ func GetReviewsForGame(pageSize int, page int, filters []int, gameSlug string, u
 	return reviewsWithUserDetails, nil
 }
 
-func GetUserGameReview(gameSlug string, username string) (*schema.GameReview, error) {
-	review, err := GetByGameAndUser(gameSlug, username)
+func GetUserGameReview(gameSlug string, userID uint) (*schema.GameReview, error) {
+	review, err := GetByGameAndUser(gameSlug, userID)
 	if err != nil {
 		return nil, err
 	}
 	return review, nil
 }
 
-func GetReview(reviewID uint, username string) (*ReviewWithUserDetails, error) {
+func GetReview(reviewID uint, userID uint) (*ReviewWithUserDetails, error) {
 	review, err := GetByID(reviewID)
 	if err != nil {
 		return nil, err
 	}
-	userDetails := user.GetBasicUserDetails(review.Creator)
+	userDetails := user.GetBasicUserDetailsByID(review.Creator)
 	if userDetails == nil {
 		return nil, err
 	}
-	_, err = GetHelpfulByUserAndReview(username, review.ID)
+	_, err = GetHelpfulByUserAndReview(userID, review.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -114,8 +118,8 @@ func GetReview(reviewID uint, username string) (*ReviewWithUserDetails, error) {
 	}, nil
 }
 
-func DeleteReview(username string, gameSlug string) error {
-	review, err := GetByGameAndUser(gameSlug, username)
+func DeleteReview(userID uint, gameSlug string) error {
+	review, err := GetByGameAndUser(gameSlug, userID)
 	if err != nil {
 		return err
 	}
@@ -123,40 +127,48 @@ func DeleteReview(username string, gameSlug string) error {
 	return nil
 }
 
-func MarkReviewAsHelpful(username string, reviewID uint) error {
-	user := user.GetByUsername(username)
-	if user == nil {
+func MarkReviewAsHelpful(userID uint, reviewID uint) error {
+	userCheck := user.GetByID(userID)
+	if userCheck == nil {
 		return fmt.Errorf("user not found")
 	}
 	_, err := GetByID(reviewID)
 	if err != nil {
 		return fmt.Errorf("review not found")
 	}
-	_, err = GetHelpfulByUserAndReview(username, reviewID)
+	_, err = GetHelpfulByUserAndReview(userID, reviewID)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		CreateHelpful(&schema.ReviewHelpful{
 			ReviewID: reviewID,
-			Username: username,
+			UserID:   userID,
 		})
 	}
 	return nil
 }
 
-func UnmarkReviewAsHelpful(username string, reviewID uint) error {
-	user := user.GetByUsername(username)
-	if user == nil {
+func UnmarkReviewAsHelpful(userID uint, reviewID uint) error {
+	userCheck := user.GetByID(userID)
+	if userCheck == nil {
 		return fmt.Errorf("user not found")
 	}
 	_, err := GetByID(reviewID)
 	if err != nil {
 		return fmt.Errorf("review not found")
 	}
-	_, err = GetHelpfulByUserAndReview(username, reviewID)
+	_, err = GetHelpfulByUserAndReview(userID, reviewID)
 	if err == nil {
 		RemoveHelpful(&schema.ReviewHelpful{
 			ReviewID: reviewID,
-			Username: username,
+			UserID:   userID,
 		})
 	}
 	return nil
+}
+
+func GetReviewCountForUser(userID uint) (int64, error) {
+	count, err := CountByUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

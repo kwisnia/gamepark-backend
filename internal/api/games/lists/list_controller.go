@@ -15,9 +15,9 @@ type ChangeListContentForm struct {
 	Slug string `json:"slug" binding:"required"`
 }
 
-func GetUserLists(c *gin.Context) {
+func GetUserListsHandler(c *gin.Context) {
 	userName := c.Param("userName")
-	lists, err := getUserLists(userName)
+	lists, err := GetUserLists(userName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -25,13 +25,13 @@ func GetUserLists(c *gin.Context) {
 	c.JSON(http.StatusOK, lists)
 }
 
-func GetUserList(c *gin.Context) {
-	listId, err := strconv.Atoi(c.Param("id"))
+func GetUserListHandler(c *gin.Context) {
+	listID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid list id"})
 		return
 	}
-	list, err := getListDetails(listId)
+	list, err := GetListDetails(listID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -39,8 +39,8 @@ func GetUserList(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func AddGameToList(c *gin.Context) {
-	listId, err := strconv.Atoi(c.Param("id"))
+func AddGameToListHandler(c *gin.Context) {
+	listID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid list id"})
 		return
@@ -54,8 +54,8 @@ func AddGameToList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid game id"})
 		return
 	}
-	userName := c.GetString("userName")
-	err = addGameToList(listId, game.Slug, userName)
+	userID := c.GetUint("userID")
+	err = AddGameToList(listID, game.Slug, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -63,8 +63,8 @@ func AddGameToList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Game added to list"})
 }
 
-func RemoveGameFromList(c *gin.Context) {
-	listId, err := strconv.Atoi(c.Param("id"))
+func RemoveGameFromListHandler(c *gin.Context) {
+	listID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid list id"})
 		return
@@ -74,8 +74,8 @@ func RemoveGameFromList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	userName := c.GetString("userName")
-	err = deleteGameFromList(listId, game.Slug, userName)
+	userID := c.GetUint("userID")
+	err = DeleteGameFromList(listID, game.Slug, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -83,14 +83,14 @@ func RemoveGameFromList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Game removed from list"})
 }
 
-func CreateList(c *gin.Context) {
-	userName := c.GetString("userName")
+func CreateListHandler(c *gin.Context) {
+	userID := c.GetUint("userID")
 	var list ListForm
 	if err := c.ShouldBindJSON(&list); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	err := createList(userName, list)
+	err := CreateList(userID, list)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -98,14 +98,14 @@ func CreateList(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func DeleteList(c *gin.Context) {
-	listId, err := strconv.Atoi(c.Param("id"))
+func DeleteListHandler(c *gin.Context) {
+	listID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid list id"})
 		return
 	}
-	userName := c.GetString("userName")
-	err = deleteList(listId, userName)
+	userID := c.GetUint("userID")
+	err = DeleteList(listID, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
@@ -113,19 +113,19 @@ func DeleteList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "List deleted"})
 }
 
-func UpdateList(c *gin.Context) {
-	listId, err := strconv.Atoi(c.Param("id"))
+func UpdateListHandler(c *gin.Context) {
+	listID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid list id"})
 		return
 	}
-	userName := c.GetString("userName")
+	userID := c.GetUint("userID")
 	var list ListForm
 	if err := c.ShouldBindJSON(&list); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	err = updateList(listId, list, userName)
+	err = UpdateList(listID, list, userID)
 	if err != nil {
 		if err.Error() == "you are not the owner of this list" {
 			c.JSON(http.StatusForbidden, gin.H{"message": err.Error()})

@@ -18,9 +18,9 @@ func GetByID(id uint) (*schema.GameList, error) {
 	return &l, nil
 }
 
-func GetByOwnerUsername(userName string) ([]schema.GameList, error) {
+func GetByOwnerID(userID uint) ([]schema.GameList, error) {
 	var l []schema.GameList
-	if err := database.DB.Where("owner = ?", userName).Find(&l).Error; err != nil {
+	if err := database.DB.Where("owner = ?", userID).Find(&l).Error; err != nil {
 		return nil, err
 	}
 	return l, nil
@@ -66,11 +66,11 @@ func GetGames(l *schema.GameList) ([]games.GameListElement, error) {
 	return g, nil
 }
 
-func GetUsersListsWhereGameIs(gameId uint, userName string) ([]schema.GameList, error) {
+func GetUsersListsWhereGameIs(gameId uint, userID uint) ([]schema.GameList, error) {
 	l := make([]schema.GameList, 0)
 	if err := database.DB.Model(&schema.GameList{}).Joins(
 		"LEFT JOIN list_games ON list_games.game_list_id = game_lists.id",
-	).Where("game_lists.owner = ? AND list_games.game_id = ?", userName, gameId).Scan(&l).Error; err != nil {
+	).Where("game_lists.owner = ? AND list_games.game_id = ?", userID, gameId).Scan(&l).Error; err != nil {
 		return nil, err
 	}
 	return l, nil

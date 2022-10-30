@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
@@ -8,13 +9,16 @@ import (
 
 type User struct {
 	gorm.Model
-	Email       string `gorm:"unique"`
-	Password    string
-	Username    string                 `gorm:"unique"`
-	UserProfile UserProfile            `gorm:"foreignkey:UserID"`
-	Lists       []schema.GameList      `gorm:"foreignkey:Owner;references:Username"`
-	Reviews     []schema.GameReview    `gorm:"foreignkey:Creator;references:Username"`
-	Helpfuls    []schema.ReviewHelpful `gorm:"foreignkey:Username;references:Username"`
+	Email                 string `gorm:"unique"`
+	Password              string
+	Username              string                               `gorm:"unique"`
+	UserProfile           UserProfile                          `gorm:"foreignkey:UserID"`
+	Lists                 []schema.GameList                    `gorm:"foreignkey:Owner;references:ID"`
+	Reviews               []schema.GameReview                  `gorm:"foreignkey:Creator;references:ID"`
+	Helpfuls              []schema.ReviewHelpful               `gorm:"foreignkey:UserID;references:ID"`
+	Discussions           []schema.GameDiscussion              `gorm:"foreignkey:CreatorID;references:ID"`
+	Posts                 []schema.DiscussionPost              `gorm:"foreignkey:CreatorID;references:ID"`
+	CompletedAchievements []achievements.AchievementCompletion `gorm:"foreignkey:UserID;references:ID"`
 }
 
 type UserProfile struct {

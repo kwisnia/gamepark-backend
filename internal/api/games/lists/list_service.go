@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 )
 
 type GameListDetails struct {
@@ -12,16 +13,20 @@ type GameListDetails struct {
 	Games       []games.GameListElement `json:"games"`
 }
 
-func getUserLists(userName string) ([]schema.GameList, error) {
-	lists, err := GetByOwnerUsername(userName)
+func GetUserLists(userName string) ([]schema.GameList, error) {
+	userCheck := user.GetByUsername(userName)
+	if userCheck == nil {
+		return nil, errors.New("user not found")
+	}
+	lists, err := GetByOwnerID(userCheck.ID)
 	if err != nil {
 		return nil, err
 	}
 	return lists, nil
 }
 
-func getListDetails(listId int) (*GameListDetails, error) {
-	list, err := GetByID(uint(listId))
+func GetListDetails(listID int) (*GameListDetails, error) {
+	list, err := GetByID(uint(listID))
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +41,7 @@ func getListDetails(listId int) (*GameListDetails, error) {
 	}, nil
 }
 
-func createList(owner string, listDetails ListForm) error {
+func CreateList(owner uint, listDetails ListForm) error {
 	list := schema.GameList{
 		Name:        listDetails.Name,
 		Description: listDetails.Description,
@@ -46,12 +51,12 @@ func createList(owner string, listDetails ListForm) error {
 	return nil
 }
 
-func addGameToList(listId int, gameSlug string, requestingUser string) error {
+func AddGameToList(listId int, gameSlug string, requestingUserID uint) error {
 	list, err := GetByID(uint(listId))
 	if err != nil {
 		return err
 	}
-	if list.Owner != requestingUser {
+	if list.Owner != requestingUserID {
 		return errors.New("you are not the owner of this list")
 	}
 	game, err := games.GetGameBySlug(gameSlug)
@@ -65,24 +70,24 @@ func addGameToList(listId int, gameSlug string, requestingUser string) error {
 	return nil
 }
 
-func deleteList(listId int, requestingUser string) error {
+func DeleteList(listId int, requestingUserID uint) error {
 	list, err := GetByID(uint(listId))
 	if err != nil {
 		return err
 	}
-	if list.Owner != requestingUser {
+	if list.Owner != requestingUserID {
 		return errors.New("you are not the owner of this list")
 	}
 	Delete(list)
 	return nil
 }
 
-func updateList(listId int, listDetails ListForm, requestingUser string) error {
+func UpdateList(listId int, listDetails ListForm, requestingUserID uint) error {
 	list, err := GetByID(uint(listId))
 	if err != nil {
 		return err
 	}
-	if list.Owner != requestingUser {
+	if list.Owner != requestingUserID {
 		return errors.New("you are not the owner of this list")
 	}
 	list.Name = listDetails.Name
@@ -91,12 +96,12 @@ func updateList(listId int, listDetails ListForm, requestingUser string) error {
 	return nil
 }
 
-func deleteGameFromList(listId int, gameSlug string, requestingUser string) error {
+func DeleteGameFromList(listId int, gameSlug string, requestingUserID uint) error {
 	list, err := GetByID(uint(listId))
 	if err != nil {
 		return err
 	}
-	if list.Owner != requestingUser {
+	if list.Owner != requestingUserID {
 		return errors.New("you are not the owner of this list")
 	}
 	game, err := games.GetGameBySlug(gameSlug)

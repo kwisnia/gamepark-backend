@@ -69,6 +69,6 @@ type GameList struct {
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
 	AvatarUrl   string         `json:"avatarUrl"`
-	Owner       string         `json:"owner"`
+	Owner       uint           `json:"owner"`
 	Games       []Game         `gorm:"many2many:list_games;" json:"games"`
 }

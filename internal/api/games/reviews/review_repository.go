@@ -41,18 +41,18 @@ func GetByGameSlug(slug string, pageSize int, offset int, filters []int) ([]sche
 	return r, nil
 }
 
-func GetByUserUsername(username string, pageSize int, offset int, filters []int) ([]schema.GameReview, error) {
+func GetByUserID(userID uint, pageSize int, offset int, filters []int) ([]schema.GameReview, error) {
 	var r []schema.GameReview
 	query := GetPageQuery(pageSize, offset, filters)
-	if err := query.Where("creator = ?", username).Find(&r).Error; err != nil {
+	if err := query.Where("creator = ?", userID).Find(&r).Error; err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func GetByGameAndUser(gameSlug string, username string) (*schema.GameReview, error) {
+func GetByGameAndUser(gameSlug string, userID uint) (*schema.GameReview, error) {
 	var r schema.GameReview
-	if err := database.DB.Preload("Platform").Preload("GameCompletion").Where("game = ? AND creator = ?", gameSlug, username).First(&r).Error; err != nil {
+	if err := database.DB.Preload("Platform").Preload("GameCompletion").Where("game = ? AND creator = ?", gameSlug, userID).First(&r).Error; err != nil {
 		return nil, err
 	}
 	return &r, nil
@@ -63,12 +63,12 @@ func CreateHelpful(r *schema.ReviewHelpful) {
 }
 
 func RemoveHelpful(r *schema.ReviewHelpful) {
-	database.DB.Where("username = ? AND review_id = ?", r.Username, r.ReviewID).Delete(r)
+	database.DB.Where("user_id = ? AND review_id = ?", r.UserID, r.ReviewID).Delete(r)
 }
 
-func GetHelpfulByUserAndReview(username string, reviewID uint) (*schema.ReviewHelpful, error) {
+func GetHelpfulByUserAndReview(userID uint, reviewID uint) (*schema.ReviewHelpful, error) {
 	var r schema.ReviewHelpful
-	if err := database.DB.Where("username = ? AND review_id = ?", username, reviewID).First(&r).Error; err != nil {
+	if err := database.DB.Where("user_id = ? AND review_id = ?", userID, reviewID).First(&r).Error; err != nil {
 		return nil, err
 	}
 	return &r, nil
@@ -76,4 +76,12 @@ func GetHelpfulByUserAndReview(username string, reviewID uint) (*schema.ReviewHe
 
 func Delete(r *schema.GameReview) {
 	database.DB.Delete(r)
+}
+
+func CountByUser(userID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.GameReview{}).Where("creator = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }

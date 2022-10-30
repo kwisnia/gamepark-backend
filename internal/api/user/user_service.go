@@ -22,18 +22,6 @@ func GetUserDetails(userName string) *DetailsResponse {
 	}
 }
 
-func GetBasicUserDetails(userName string) *BasicUserDetails {
-	user := GetByUsername(userName)
-	if user == nil {
-		return nil
-	}
-	return &BasicUserDetails{
-		Username:    user.Username,
-		DisplayName: user.UserProfile.DisplayName,
-		ID:          user.ID,
-	}
-}
-
 func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
 	user := GetByID(userID)
 	if user == nil {
