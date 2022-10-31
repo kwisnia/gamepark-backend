@@ -2,10 +2,9 @@ package main
 
 import (
 	"errors"
+	"github.com/joho/godotenv"
 	"github.com/kwisnia/igdb/v2"
-	games "github.com/kwisnia/inzynierka-backend/internal/api/games"
-	gamesSchema "github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
-	"github.com/kwisnia/inzynierka-backend/internal/pkg/config"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"github.com/kwisnia/inzynierka-backend/pkg/slice_funcs"
 	"gorm.io/gorm"
@@ -18,11 +17,14 @@ import (
 var logger = log.Default()
 var db *gorm.DB
 var client = igdb.NewClient(os.Getenv("IGDB_CLIENT_ID"), os.Getenv("IGDB_ACCESS_TOKEN"), nil)
-var externalCategories []gamesSchema.ExternalCategory
+var externalCategories []schema.ExternalCategory
 
 func main() {
 	var err error
-	config.LoadConfig()
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	database.SetupDB()
 	db = database.DB
 	db.Find(&externalCategories)
@@ -59,7 +61,7 @@ func fetchCompanies() error {
 			return err
 		}
 		for _, company := range companies {
-			result := db.First(&gamesSchema.Company{}, company.ID)
+			result := db.First(&schema.Company{}, company.ID)
 			if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				var changedCompanyId *uint = nil
 				if company.ChangedCompanyID != nil && company.ChangedCompanyID.ID != company.ID {
@@ -70,16 +72,16 @@ func fetchCompanies() error {
 						return err
 					}
 				}
-				dbCompany := gamesSchema.Company{
+				dbCompany := schema.Company{
 					Model: gorm.Model{
 						ID: uint(company.ID),
 					},
 					ChangedCompanyID: changedCompanyId,
-					CompanyLogo: gamesSchema.CompanyLogo{
+					CompanyLogo: schema.CompanyLogo{
 						Model: gorm.Model{
 							ID: uint(company.Logo.ID),
 						},
-						Image: gamesSchema.Image{
+						Image: schema.Image{
 							Height:  company.Logo.Height,
 							Width:   company.Logo.Width,
 							ImageID: company.Logo.ImageID,
@@ -102,7 +104,7 @@ func fetchCompanies() error {
 }
 
 func fetchCompany(companyId int) error {
-	result := db.First(&gamesSchema.Company{}, companyId)
+	result := db.First(&schema.Company{}, companyId)
 	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		opts := igdb.ComposeOptions(
 			igdb.SetFields("name", "description", "start_date", "slug", "logo.*", "changed_company_id.*"),
@@ -122,7 +124,7 @@ func fetchCompany(companyId int) error {
 			changedCompanyId := new(uint)
 			*changedCompanyId = uint(company.ChangedCompanyID.ID)
 		}
-		return db.Create(&gamesSchema.Company{
+		return db.Create(&schema.Company{
 			Model: gorm.Model{
 				ID: uint(company.ID),
 			},
@@ -155,8 +157,8 @@ func fetchGenres() error {
 
 		}
 		for _, genre := range genres {
-			dbGenre := games.Genre{
-				EnumCategory: gamesSchema.EnumCategory{
+			dbGenre := schema.Genre{
+				EnumCategory: schema.EnumCategory{
 					ID:   uint(genre.ID),
 					Name: genre.Name,
 				},
@@ -189,7 +191,7 @@ func fetchGames(offset int) error {
 		}
 
 		for _, game := range igdbGames {
-			result := db.First(&games.Game{}, game.ID)
+			result := db.First(&schema.Game{}, game.ID)
 			if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				var parentGameId *uint = nil
 				var versionParentId *uint = nil
@@ -366,8 +368,8 @@ func fetchGame(gameId int) error {
 	return nil
 }
 
-func prepareGame(gameId int, getParentVersion bool) (*games.Game, error) {
-	dbGame := games.Game{}
+func prepareGame(gameId int, getParentVersion bool) (*schema.Game, error) {
+	dbGame := schema.Game{}
 	result := db.First(&dbGame, gameId)
 	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		var parentGameId *uint = nil
@@ -414,13 +416,13 @@ func prepareGame(gameId int, getParentVersion bool) (*games.Game, error) {
 	return &dbGame, nil
 }
 
-func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *uint) *games.Game {
-	return &games.Game{
+func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *uint) *schema.Game {
+	return &schema.Game{
 		Model: gorm.Model{
 			ID: uint(game.ID),
 		},
-		AgeRatings: slice_funcs.Map(game.AgeRatings, func(ageRating igdb.AgeRatingWrapper) gamesSchema.GameAgeRating {
-			return gamesSchema.GameAgeRating{
+		AgeRatings: slice_funcs.Map(game.AgeRatings, func(ageRating igdb.AgeRatingWrapper) schema.GameAgeRating {
+			return schema.GameAgeRating{
 				Model: gorm.Model{
 					ID: uint(ageRating.ID),
 				},
@@ -431,12 +433,12 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 		}),
 		AggregatedRating:      game.AggregatedRating,
 		AggregatedRatingCount: game.AggregatedRatingCount,
-		Artworks: slice_funcs.Map(game.Artworks, func(artwork igdb.ArtworkWrapper) games.Artwork {
-			return games.Artwork{
+		Artworks: slice_funcs.Map(game.Artworks, func(artwork igdb.ArtworkWrapper) schema.Artwork {
+			return schema.Artwork{
 				Model: gorm.Model{
 					ID: uint(artwork.ID),
 				},
-				Image: gamesSchema.Image{
+				Image: schema.Image{
 					Height:  artwork.Height,
 					Width:   artwork.Width,
 					ImageID: artwork.ImageID,
@@ -445,19 +447,19 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 			}
 		}),
 		CategoryID: uint(game.Category),
-		Cover: games.Cover{
+		Cover: schema.Cover{
 			Model: gorm.Model{
 				ID: uint(game.Cover.ID),
 			},
-			Image: gamesSchema.Image{
+			Image: schema.Image{
 				Height:  game.Cover.Height,
 				Width:   game.Cover.Width,
 				ImageID: game.Cover.ImageID,
 				URL:     game.Cover.URL,
 			},
 		},
-		ExternalGames: slice_funcs.Map(filterExternalCategories(game.ExternalGames), func(externalGame igdb.ExternalGameWrapper) gamesSchema.ExternalGame {
-			return gamesSchema.ExternalGame{
+		ExternalGames: slice_funcs.Map(filterExternalCategories(game.ExternalGames), func(externalGame igdb.ExternalGameWrapper) schema.ExternalGame {
+			return schema.ExternalGame{
 				Model: gorm.Model{
 					ID: uint(externalGame.ID),
 				},
@@ -467,15 +469,15 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 			}
 		}),
 		FirstReleaseDate: time.Unix(int64(game.FirstReleaseDate), 0),
-		Genres: slice_funcs.Map(game.Genres, func(genre igdb.GenreWrapper) games.Genre {
-			return games.Genre{
-				EnumCategory: gamesSchema.EnumCategory{
+		Genres: slice_funcs.Map(game.Genres, func(genre igdb.GenreWrapper) schema.Genre {
+			return schema.Genre{
+				EnumCategory: schema.EnumCategory{
 					ID: uint(genre.ID),
 				},
 			}
 		}),
-		InvolvedCompanies: slice_funcs.Map(game.InvolvedCompanies, func(involvedCompany igdb.InvolvedCompanyWrapper) gamesSchema.InvolvedCompany {
-			return gamesSchema.InvolvedCompany{
+		InvolvedCompanies: slice_funcs.Map(game.InvolvedCompanies, func(involvedCompany igdb.InvolvedCompanyWrapper) schema.InvolvedCompany {
+			return schema.InvolvedCompany{
 				Model: gorm.Model{
 					ID: uint(involvedCompany.ID),
 				},
@@ -488,19 +490,17 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 		}),
 		Name:         game.Name,
 		ParentGameID: parentGameId,
-		Platforms: slice_funcs.Map(game.Platforms, func(platform igdb.PlatformWrapper) gamesSchema.Platform {
-			return gamesSchema.Platform{
-				Model: gorm.Model{
-					ID: uint(platform.ID),
-				},
+		Platforms: slice_funcs.Map(game.Platforms, func(platform igdb.PlatformWrapper) schema.Platform {
+			return schema.Platform{
+				ID:           uint(platform.ID),
 				Name:         platform.Name,
 				Abbreviation: platform.Abbreviation,
 				Generation:   platform.Generation,
-				Logo: gamesSchema.PlatformLogo{
+				Logo: schema.PlatformLogo{
 					Model: gorm.Model{
 						ID: uint(platform.PlatformLogo.ID),
 					},
-					Image: gamesSchema.Image{
+					Image: schema.Image{
 						Height:  platform.PlatformLogo.Height,
 						Width:   platform.PlatformLogo.Width,
 						ImageID: platform.PlatformLogo.ImageID,
@@ -513,8 +513,8 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 		}),
 		Rating:      0,
 		RatingCount: 0,
-		ReleaseDates: slice_funcs.Map(game.ReleaseDates, func(releaseDate igdb.ReleaseDateWrapper) gamesSchema.ReleaseDate {
-			return gamesSchema.ReleaseDate{
+		ReleaseDates: slice_funcs.Map(game.ReleaseDates, func(releaseDate igdb.ReleaseDateWrapper) schema.ReleaseDate {
+			return schema.ReleaseDate{
 				Model: gorm.Model{
 					ID: uint(releaseDate.ID),
 				},
@@ -525,12 +525,12 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 				CategoryID: uint(releaseDate.Category),
 			}
 		}),
-		Screenshots: slice_funcs.Map(game.Screenshots, func(screenshot igdb.ScreenshotWrapper) games.Screenshot {
-			return games.Screenshot{
+		Screenshots: slice_funcs.Map(game.Screenshots, func(screenshot igdb.ScreenshotWrapper) schema.Screenshot {
+			return schema.Screenshot{
 				Model: gorm.Model{
 					ID: uint(screenshot.ID),
 				},
-				Image: gamesSchema.Image{
+				Image: schema.Image{
 					Height:  screenshot.Height,
 					Width:   screenshot.Width,
 					ImageID: screenshot.ImageID,
@@ -544,12 +544,12 @@ func createBaseGameObject(game *igdb.Game, parentGameId *uint, versionParentId *
 		IGDBUrl:         game.URL,
 		VersionParentID: versionParentId,
 		VersionTitle:    game.VersionTitle,
-		Videos: slice_funcs.Map(game.Videos, func(video igdb.GameVideoWrapper) games.GameVideo {
-			return games.GameVideo{
+		Videos: slice_funcs.Map(game.Videos, func(video igdb.GameVideoWrapper) schema.GameVideo {
+			return schema.GameVideo{
 				Model: gorm.Model{
 					ID: uint(video.ID),
 				},
-				Video: gamesSchema.Video{
+				Video: schema.Video{
 					VideoID: video.VideoID,
 					Name:    video.Name,
 				},

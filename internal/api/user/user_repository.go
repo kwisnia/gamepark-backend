@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	schema2 "github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 )
@@ -13,24 +13,27 @@ type User struct {
 	Password              string
 	Username              string                               `gorm:"unique"`
 	UserProfile           UserProfile                          `gorm:"foreignkey:UserID"`
-	Lists                 []schema.GameList                    `gorm:"foreignkey:Owner;references:ID"`
-	Reviews               []schema.GameReview                  `gorm:"foreignkey:Creator;references:ID"`
-	Helpfuls              []schema.ReviewHelpful               `gorm:"foreignkey:UserID;references:ID"`
-	Discussions           []schema.GameDiscussion              `gorm:"foreignkey:CreatorID;references:ID"`
-	Posts                 []schema.DiscussionPost              `gorm:"foreignkey:CreatorID;references:ID"`
+	Lists                 []schema2.GameList                   `gorm:"foreignkey:Owner;references:ID"`
+	Reviews               []schema2.GameReview                 `gorm:"foreignkey:Creator;references:ID"`
+	Helpfuls              []schema2.ReviewHelpful              `gorm:"foreignkey:UserID;references:ID"`
+	Discussions           []schema2.GameDiscussion             `gorm:"foreignkey:CreatorID;references:ID"`
+	Posts                 []schema2.DiscussionPost             `gorm:"foreignkey:CreatorID;references:ID"`
 	CompletedAchievements []achievements.AchievementCompletion `gorm:"foreignkey:UserID;references:ID"`
 }
 
 type UserProfile struct {
 	gorm.Model
 	DisplayName string
-	FirstName   *string
-	LastName    *string
 	UserID      uint
+	Avatar      *string
 }
 
-func Save(u *User) {
+func SaveNewUser(u *User) {
 	database.DB.Create(u)
+}
+
+func UpdateUser(u *User) {
+	database.DB.Session(&gorm.Session{FullSaveAssociations: true}).Save(u)
 }
 
 func GetByEmail(email string) *User {

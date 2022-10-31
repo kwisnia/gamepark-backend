@@ -8,11 +8,12 @@ import (
 type ConditionType string
 
 const (
-	ConditionTypeReviews     ConditionType = "reviews"
-	ConditionTypeDiscussions ConditionType = "discussions"
-	ConditionTypePosts       ConditionType = "posts"
-	ConditionTypeLists       ConditionType = "lists"
-	ConditionTypeHelpfuls    ConditionType = "helpfuls"
+	ConditionTypeReviews          ConditionType = "reviews"
+	ConditionTypeDiscussions      ConditionType = "discussions"
+	ConditionTypePosts            ConditionType = "posts"
+	ConditionTypeLists            ConditionType = "lists"
+	ConditionTypeHelpfuls         ConditionType = "helpfuls"
+	ConditionTypeProfileFirstEdit ConditionType = "profile_first_edit"
 )
 
 type Achievement struct {

@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 )
@@ -93,4 +93,12 @@ func GetScoreByUserAndPost(userID uint, postID uint) (*schema.PostScore, error) 
 
 func Delete(r *schema.DiscussionPost) error {
 	return database.DB.Delete(r).Error
+}
+
+func CountByUser(userID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.DiscussionPost{}).Where("creator_id = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }

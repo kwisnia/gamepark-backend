@@ -3,8 +3,10 @@ package discussions
 import (
 	"errors"
 	"fmt"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions/posts"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 	"gorm.io/gorm"
 )
@@ -42,6 +44,13 @@ func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (
 	if err := Save(&discussion); err != nil {
 		return nil, err
 	}
+	go func() {
+		userDiscussionCount, err := GetDiscussionCountForUser(userID)
+		if err != nil {
+			return
+		}
+		dispatcher.DispatchAchievementCheck(userID, achievements.ConditionTypeDiscussions, userDiscussionCount)
+	}()
 	return &discussion, nil
 }
 
@@ -87,6 +96,7 @@ func GetDiscussionsForGame(pageSize int, page int, game string, userID uint) ([]
 			PostsCount:             postsCount,
 		}
 	}
+
 	return discussionsWithUserDetails, nil
 }
 
@@ -174,4 +184,12 @@ func ScoreDiscussion(userID uint, discussionID uint, score int) error {
 
 func DeleteScore(score *schema.DiscussionScore) error {
 	return RemoveDiscussionScore(score)
+}
+
+func GetDiscussionCountForUser(userID uint) (int64, error) {
+	count, err := CountByUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

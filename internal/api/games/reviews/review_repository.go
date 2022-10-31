@@ -2,7 +2,7 @@ package reviews
 
 import (
 	"fmt"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 )
@@ -81,6 +81,14 @@ func Delete(r *schema.GameReview) {
 func CountByUser(userID uint) (int64, error) {
 	var count int64
 	if err := database.DB.Model(&schema.GameReview{}).Where("creator = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func CountHelpfulByUser(userID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.ReviewHelpful{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return 0, err
 	}
 	return count, nil

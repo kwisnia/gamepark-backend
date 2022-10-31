@@ -2,8 +2,10 @@ package lists
 
 import (
 	"errors"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 )
 
@@ -47,7 +49,17 @@ func CreateList(owner uint, listDetails ListForm) error {
 		Description: listDetails.Description,
 		Owner:       owner,
 	}
-	Save(&list)
+	err := Save(&list)
+	if err != nil {
+		return err
+	}
+	go func() {
+		userListCount, err := GetCountForUser(owner)
+		if err != nil {
+			return
+		}
+		dispatcher.DispatchAchievementCheck(owner, achievements.ConditionTypeLists, userListCount)
+	}()
 	return nil
 }
 
@@ -113,4 +125,12 @@ func DeleteGameFromList(listId int, gameSlug string, requestingUserID uint) erro
 		return err
 	}
 	return nil
+}
+
+func CountByUser(userID uint) (int64, error) {
+	count, err := GetCountForUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

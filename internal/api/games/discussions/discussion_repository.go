@@ -2,7 +2,7 @@ package discussions
 
 import (
 	"fmt"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 )
@@ -82,4 +82,12 @@ func GetScoreByUserAndDiscussion(userID uint, discussionID uint) (*schema.Discus
 
 func Delete(r *schema.GameDiscussion) error {
 	return database.DB.Delete(r).Error
+}
+
+func CountByUser(userID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.GameDiscussion{}).Where("creator_id = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }

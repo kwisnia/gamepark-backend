@@ -3,9 +3,12 @@ package reviews
 import (
 	"errors"
 	"fmt"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
+	"github.com/kwisnia/inzynierka-backend/internal/api/websocket"
 	"gorm.io/gorm"
 )
 
@@ -49,6 +52,13 @@ func CreateReview(userID uint, gameSlug string, form ReviewForm) (*schema.GameRe
 	if err != nil {
 		return nil, err
 	}
+	go func() {
+		userListCount, err := GetReviewCountForUser(userID)
+		if err != nil {
+			return
+		}
+		dispatcher.DispatchAchievementCheck(userID, achievements.ConditionTypeReviews, userListCount)
+	}()
 	return review, nil
 }
 
@@ -143,6 +153,18 @@ func MarkReviewAsHelpful(userID uint, reviewID uint) error {
 			UserID:   userID,
 		})
 	}
+	go func() {
+		fmt.Println("Halo")
+		websocket.ClientHub.Send <- &websocket.Message{
+			ID:   userID,
+			Data: []byte("halo"),
+		}
+		userHelpfulCount, err := GetHelpfulCountForUser(userID)
+		if err != nil {
+			return
+		}
+		dispatcher.DispatchAchievementCheck(userID, achievements.ConditionTypeHelpfuls, userHelpfulCount)
+	}()
 	return nil
 }
 
@@ -167,6 +189,14 @@ func UnmarkReviewAsHelpful(userID uint, reviewID uint) error {
 
 func GetReviewCountForUser(userID uint) (int64, error) {
 	count, err := CountByUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func GetHelpfulCountForUser(userID uint) (int64, error) {
+	count, err := CountHelpfulByUser(userID)
 	if err != nil {
 		return 0, err
 	}

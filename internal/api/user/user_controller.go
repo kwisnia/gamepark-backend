@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +22,10 @@ type RegisterForm struct {
 type DetailsResponse struct {
 	Email       string            `json:"email"`
 	Username    string            `json:"username"`
-	FirstName   *string           `json:"firstName"`
-	LastName    *string           `json:"lastName"`
 	DisplayName string            `json:"displayName"`
 	ID          uint              `json:"id"`
 	Lists       []schema.GameList `json:"lists"`
+	Avatar      *string           `json:"avatar"`
 }
 
 // register user
@@ -51,12 +50,11 @@ func RegisterUser(c *gin.Context) {
 		Password: crypto.HashAndSalt(form.Password),
 		Username: form.Username,
 		UserProfile: UserProfile{
-			FirstName:   nil,
-			LastName:    nil,
 			DisplayName: form.DisplayName,
+			Avatar:      nil,
 		},
 	}
-	Save(user)
+	SaveNewUser(user)
 	token, err := crypto.CreateToken(user.Username, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
@@ -109,4 +107,25 @@ func GetDetailsByUsernameHandler(c *gin.Context) {
 	}
 	user.Email = ""
 	c.JSON(http.StatusOK, user)
+}
+
+func UploadUserAvatarHandler(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	userName := c.GetString("userName")
+	userID := c.GetUint("userID")
+	user := GetByUsername(userName)
+	if user == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
+		return
+	}
+	err = UploadUserAvatar(userID, userName, file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded"})
 }

@@ -1,43 +1,51 @@
 package main
 
 import (
-	gamesSchema "github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/joho/godotenv"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
-	"github.com/kwisnia/inzynierka-backend/internal/pkg/config"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
+	"log"
 )
 
 func main() {
-	config.LoadConfig()
+	// load .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	database.SetupDB()
 	db := database.DB
 	db.AutoMigrate(&user.User{})
 	db.AutoMigrate(&user.UserProfile{})
-	db.AutoMigrate(&gamesSchema.AgeRatingOrganization{})
-	db.AutoMigrate(&gamesSchema.AgeRating{})
-	db.AutoMigrate(&gamesSchema.GameAgeRating{})
-	db.AutoMigrate(&gamesSchema.ExternalGame{})
-	db.AutoMigrate(&gamesSchema.CompanyLogo{})
-	db.AutoMigrate(&gamesSchema.Company{})
-	db.AutoMigrate(&gamesSchema.InvolvedCompany{})
-	db.AutoMigrate(&gamesSchema.ReleaseRegion{})
-	db.AutoMigrate(&gamesSchema.ReleaseDateCategory{})
-	db.AutoMigrate(&gamesSchema.ReleaseDate{})
-	db.AutoMigrate(&gamesSchema.PlatformLogo{})
-	db.AutoMigrate(&gamesSchema.Platform{})
-	db.AutoMigrate(&gamesSchema.Artwork{})
-	db.AutoMigrate(&gamesSchema.GameCategory{})
-	db.AutoMigrate(&gamesSchema.Cover{})
-	db.AutoMigrate(&gamesSchema.Screenshot{})
-	db.AutoMigrate(&gamesSchema.GameVideo{})
-	db.AutoMigrate(&gamesSchema.Genre{})
-	db.AutoMigrate(&gamesSchema.Game{})
-	db.AutoMigrate(&gamesSchema.GameList{})
-	db.AutoMigrate(&gamesSchema.GameCompletion{})
-	db.AutoMigrate(&gamesSchema.GameReview{})
-	db.AutoMigrate(&gamesSchema.ReviewHelpful{})
-	db.AutoMigrate(&gamesSchema.GameDiscussion{})
-	db.AutoMigrate(&gamesSchema.DiscussionScore{})
-	db.AutoMigrate(&gamesSchema.DiscussionPost{})
-	db.AutoMigrate(&gamesSchema.PostScore{})
+	db.AutoMigrate(&schema.AgeRatingOrganization{})
+	db.AutoMigrate(&schema.AgeRating{})
+	db.AutoMigrate(&schema.GameAgeRating{})
+	db.AutoMigrate(&schema.ExternalGame{})
+	db.AutoMigrate(&schema.CompanyLogo{})
+	db.AutoMigrate(&schema.Company{})
+	db.AutoMigrate(&schema.InvolvedCompany{})
+	db.AutoMigrate(&schema.ReleaseRegion{})
+	db.AutoMigrate(&schema.ReleaseDateCategory{})
+	db.AutoMigrate(&schema.ReleaseDate{})
+	db.AutoMigrate(&schema.PlatformLogo{})
+	db.AutoMigrate(&schema.Platform{})
+	db.AutoMigrate(&schema.Artwork{})
+	db.AutoMigrate(&schema.GameCategory{})
+	db.AutoMigrate(&schema.Cover{})
+	db.AutoMigrate(&schema.Screenshot{})
+	db.AutoMigrate(&schema.GameVideo{})
+	db.AutoMigrate(&schema.Genre{})
+	db.AutoMigrate(&schema.Game{})
+	db.AutoMigrate(&schema.GameList{})
+	db.AutoMigrate(&schema.GameCompletion{})
+	db.AutoMigrate(&schema.GameReview{})
+	db.AutoMigrate(&schema.ReviewHelpful{})
+	db.AutoMigrate(&schema.GameDiscussion{})
+	db.AutoMigrate(&schema.DiscussionScore{})
+	db.AutoMigrate(&schema.DiscussionPost{})
+	db.AutoMigrate(&schema.PostScore{})
+	db.AutoMigrate(&achievements.Achievement{})
+	db.AutoMigrate(&achievements.AchievementCompletion{})
 }

@@ -1,13 +1,12 @@
 package crypto
 
 import (
-	"log"
-	"strings"
-	"time"
-
 	"github.com/golang-jwt/jwt/v4"
 	config_loader "github.com/kwisnia/inzynierka-backend/internal/pkg/config"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"strings"
+	"time"
 )
 
 const oneYear = time.Hour * 24 * 365
@@ -36,8 +35,7 @@ func ComparePasswords(hashedPwd string, plainPwd string) bool {
 }
 
 func CreateToken(username string, userID uint) (string, error) {
-	config := config_loader.Config
-
+	secret := config_loader.GetEnv("JWT_SECRET")
 	var err error
 	accessTokenClaims := JwtClaims{
 		Username: username,
@@ -45,7 +43,7 @@ func CreateToken(username string, userID uint) (string, error) {
 		UserID:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, accessTokenClaims)
-	token, err := accessToken.SignedString([]byte(config.Server.Secret))
+	token, err := accessToken.SignedString([]byte(secret))
 	if err != nil {
 		return "error creating token", err
 	}
@@ -53,10 +51,10 @@ func CreateToken(username string, userID uint) (string, error) {
 }
 
 func ValidateToken(tokenString string) (*string, *uint, bool) {
-	config := config_loader.Config
+	secret := config_loader.GetEnv("JWT_SECRET")
 	jwtString := strings.Split(tokenString, "Bearer ")[1]
 	token, err := jwt.ParseWithClaims(jwtString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(config.Server.Secret), nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, nil, false

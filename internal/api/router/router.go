@@ -9,6 +9,7 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/user_game_info"
 	"github.com/kwisnia/inzynierka-backend/internal/api/middleware"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
+	"github.com/kwisnia/inzynierka-backend/internal/api/websocket"
 )
 
 func Setup() *gin.Engine {
@@ -30,6 +31,7 @@ func Setup() *gin.Engine {
 	r.GET("/:userName/lists", lists.GetUserListsHandler)
 	r.GET("/:userName/reviews", reviews.GetReviewsForUserHandler)
 	r.GET("/:userName/discussions", discussions.GetDiscussionsForUserHandler)
+	r.POST("/:userName/avatar", middleware.AuthRequired(), user.UploadUserAvatarHandler)
 	r.GET("/list/:id", lists.GetUserListHandler)
 	r.POST("/list", middleware.AuthRequired(), lists.CreateListHandler)
 	r.PATCH("/list/:id", middleware.AuthRequired(), lists.UpdateListHandler)
@@ -42,6 +44,7 @@ func Setup() *gin.Engine {
 	r.DELETE("/games/:slug/reviews", middleware.AuthRequired(), reviews.DeleteReviewHandler)
 	r.POST("/games/:slug/reviews/:reviewID/helpful", middleware.AuthRequired(), reviews.MarkReviewAsHelpfulHandler)
 	r.DELETE("/games/:slug/reviews/:reviewID/helpful", middleware.AuthRequired(), reviews.UnmarkReviewAsHelpfulHandler)
+	r.GET("/ws", middleware.QueryAuthRequired(), websocket.WebSockerConnectionHandler)
 	getDiscussionRoutes(r)
 	return r
 }

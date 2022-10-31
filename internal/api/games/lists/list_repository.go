@@ -2,12 +2,12 @@ package lists
 
 import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 )
 
-func Save(l *schema.GameList) {
-	database.DB.Create(l)
+func Save(l *schema.GameList) error {
+	return database.DB.Create(l).Error
 }
 
 func GetByID(id uint) (*schema.GameList, error) {
@@ -74,4 +74,12 @@ func GetUsersListsWhereGameIs(gameId uint, userID uint) ([]schema.GameList, erro
 		return nil, err
 	}
 	return l, nil
+}
+
+func GetCountForUser(userID uint) (int64, error) {
+	var count int64
+	if err := database.DB.Model(&schema.GameList{}).Where("owner = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }

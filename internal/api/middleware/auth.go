@@ -41,3 +41,22 @@ func AuthOptional() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func QueryAuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authorizationHeader := c.Query("authorization")
+		if authorizationHeader == "" {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		userName, userID, valid := crypto.ValidateToken(authorizationHeader)
+		if !valid {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		} else {
+			c.Set("userName", *userName)
+			c.Set("userID", *userID)
+			c.Next()
+		}
+	}
+}

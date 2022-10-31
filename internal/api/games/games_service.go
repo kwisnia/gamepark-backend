@@ -1,7 +1,7 @@
 package games
 
 import (
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"strings"
 )
 

@@ -3,7 +3,9 @@ package posts
 import (
 	"errors"
 	"fmt"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
@@ -37,6 +39,13 @@ func CreatePost(userID uint, discussionID uint, postForm PostForm) (*schema.Disc
 	if err := SaveNewPost(&post); err != nil {
 		return nil, err
 	}
+	go func() {
+		userPostsCount, err := GetPostCountForUser(userID)
+		if err != nil {
+			return
+		}
+		dispatcher.DispatchAchievementCheck(userID, achievements.ConditionTypePosts, userPostsCount)
+	}()
 	return &post, nil
 }
 
@@ -175,4 +184,12 @@ func ScorePost(userID uint, postID uint, score int) error {
 		UserID: userID,
 	})
 	return err
+}
+
+func GetPostCountForUser(userID uint) (int64, error) {
+	count, err := CountByUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

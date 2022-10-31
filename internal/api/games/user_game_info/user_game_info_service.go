@@ -5,7 +5,7 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/lists"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/reviews"
-	"github.com/kwisnia/inzynierka-backend/internal/api/games/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
 	"gorm.io/gorm"
 )
