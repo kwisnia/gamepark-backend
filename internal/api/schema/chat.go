@@ -1,6 +1,6 @@
-package chat
+package schema
 
-type Message struct {
+type ChatMessage struct {
 	ID         uint
 	Content    string
 	ReceiverID uint

@@ -61,3 +61,21 @@ func UploadUserAvatar(userID uint, username string, file *multipart.FileHeader) 
 	UpdateUser(user)
 	return nil
 }
+
+func GetUsers(pageSize int, page int, search string) ([]BasicUserDetails, error) {
+	offset := pageSize * (page - 1)
+	users, err := GetBySearch(pageSize, offset, search)
+	if err != nil {
+		return nil, err
+	}
+	var usersDetails = make([]BasicUserDetails, len(users))
+	for i, user := range users {
+		usersDetails[i] = BasicUserDetails{
+			Username:    user.Username,
+			DisplayName: user.UserProfile.DisplayName,
+			ID:          user.ID,
+			Avatar:      user.UserProfile.Avatar,
+		}
+	}
+	return usersDetails, nil
+}

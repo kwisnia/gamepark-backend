@@ -1,6 +1,8 @@
 package achievements
 
-import "github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
+import (
+	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
+)
 
 func GetByID(id uint) (Achievement, error) {
 	var achievement Achievement

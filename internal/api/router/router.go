@@ -2,6 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kwisnia/inzynierka-backend/internal/api/chat"
+	"github.com/kwisnia/inzynierka-backend/internal/api/file"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/lists"
@@ -20,13 +22,14 @@ func Setup() *gin.Engine {
 			"message": "pong",
 		})
 	})
-	r.POST("/login", user.LoginUser)
-	r.POST("/register", user.RegisterUser)
+	r.POST("/login", user.LoginUserHandler)
+	r.POST("/register", user.RegisterUserHandler)
+	r.GET("/users", user.GetUsersHandler)
 	r.GET("/games", games.GetGamesHandler)
 	r.GET("/games/:slug", games.GetGameHandler)
 	r.GET("/games/:slug/info", games.GetGameShortInfoHandler)
 	r.GET("games/:slug/user", middleware.AuthRequired(), user_game_info.GetUserGameInfoHandler)
-	r.GET("/me/details", middleware.AuthRequired(), user.GetDetails)
+	r.GET("/me/details", middleware.AuthRequired(), user.GetDetailsHandler)
 	r.GET("/:userName/details", user.GetDetailsByUsernameHandler)
 	r.GET("/:userName/lists", lists.GetUserListsHandler)
 	r.GET("/:userName/reviews", reviews.GetReviewsForUserHandler)
@@ -45,6 +48,9 @@ func Setup() *gin.Engine {
 	r.POST("/games/:slug/reviews/:reviewID/helpful", middleware.AuthRequired(), reviews.MarkReviewAsHelpfulHandler)
 	r.DELETE("/games/:slug/reviews/:reviewID/helpful", middleware.AuthRequired(), reviews.UnmarkReviewAsHelpfulHandler)
 	r.GET("/ws", middleware.QueryAuthRequired(), websocket.WebSockerConnectionHandler)
+	r.GET("/chat/:user", middleware.AuthRequired(), chat.GetChatHistoryHandler)
+	r.GET("/chat/history", middleware.AuthRequired(), chat.GetChatReceiversHandler)
+	r.POST("/image", middleware.AuthRequired(), file.UploadImageHandler)
 	getDiscussionRoutes(r)
 	return r
 }

@@ -2,7 +2,10 @@ package websocket
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/kwisnia/inzynierka-backend/internal/api/chat"
 	"log"
 	"net/http"
 	"time"
@@ -70,14 +73,36 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		err = VerifyIncomingMessage(message)
+		fmt.Println(string(message))
+		obj, err := VerifyIncomingMessage(message)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		c.hub.Send <- &Message{
-			ID:   c.userID,
-			Data: message,
+		if receiver, ok := obj.Data["receiver"].(float64); ok {
+			err := chat.SaveNewMessage(c.userID, chat.MessageForm{
+				Receiver: uint(receiver),
+				Content:  obj.Data["content"].(string),
+			})
+			if err != nil {
+				return
+			}
+			c.hub.Send <- &Message{
+				SenderID:   c.userID,
+				ReceiverID: uint(receiver),
+				Data:       message,
+			}
+			confirmationMessage, err := json.Marshal(map[string]string{
+				"messageType": "successfulMessageSend",
+			})
+			fmt.Println("error marshala", err)
+			if err != nil {
+				return
+			}
+			c.hub.Send <- &Message{
+				ReceiverID: c.userID,
+				Data:       confirmationMessage,
+			}
 		}
 	}
 }

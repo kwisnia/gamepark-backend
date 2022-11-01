@@ -156,8 +156,8 @@ func MarkReviewAsHelpful(userID uint, reviewID uint) error {
 	go func() {
 		fmt.Println("Halo")
 		websocket.ClientHub.Send <- &websocket.Message{
-			ID:   userID,
-			Data: []byte("halo"),
+			ReceiverID: userID,
+			Data:       []byte("halo"),
 		}
 		userHelpfulCount, err := GetHelpfulCountForUser(userID)
 		if err != nil {

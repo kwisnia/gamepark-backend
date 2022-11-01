@@ -2,7 +2,9 @@ package user
 
 import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
+	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kwisnia/inzynierka-backend/pkg/crypto"
@@ -29,7 +31,7 @@ type DetailsResponse struct {
 }
 
 // register user
-func RegisterUser(c *gin.Context) {
+func RegisterUserHandler(c *gin.Context) {
 	var form RegisterForm
 	if err := c.ShouldBindJSON(&form); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -45,11 +47,11 @@ func RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid username"})
 		return
 	}
-	user = &User{
+	user = &userschema.User{
 		Email:    form.Email,
 		Password: crypto.HashAndSalt(form.Password),
 		Username: form.Username,
-		UserProfile: UserProfile{
+		UserProfile: userschema.UserProfile{
 			DisplayName: form.DisplayName,
 			Avatar:      nil,
 		},
@@ -64,7 +66,7 @@ func RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"email": user.Email})
 }
 
-func LoginUser(c *gin.Context) {
+func LoginUserHandler(c *gin.Context) {
 	var form LoginForm
 	if err := c.ShouldBindJSON(&form); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -88,7 +90,7 @@ func LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"email": user.Email})
 }
 
-func GetDetails(c *gin.Context) {
+func GetDetailsHandler(c *gin.Context) {
 	userName := c.GetString("userName")
 	user := GetUserDetails(userName)
 	if user == nil {
@@ -128,4 +130,24 @@ func UploadUserAvatarHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded"})
+}
+
+func GetUsersHandler(c *gin.Context) {
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid after"})
+		return
+	}
+	search := c.DefaultQuery("search", "")
+	users, err := GetUsers(pageSize, page, search)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, users)
 }

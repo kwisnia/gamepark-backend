@@ -4,7 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
-	"github.com/kwisnia/inzynierka-backend/internal/api/user"
+	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"log"
 )
@@ -17,8 +17,8 @@ func main() {
 	}
 	database.SetupDB()
 	db := database.DB
-	db.AutoMigrate(&user.User{})
-	db.AutoMigrate(&user.UserProfile{})
+	db.AutoMigrate(&userschema.User{})
+	db.AutoMigrate(&userschema.UserProfile{})
 	db.AutoMigrate(&schema.AgeRatingOrganization{})
 	db.AutoMigrate(&schema.AgeRating{})
 	db.AutoMigrate(&schema.GameAgeRating{})
@@ -48,4 +48,5 @@ func main() {
 	db.AutoMigrate(&schema.PostScore{})
 	db.AutoMigrate(&achievements.Achievement{})
 	db.AutoMigrate(&achievements.AchievementCompletion{})
+	db.AutoMigrate(&userschema.Message{})
 }

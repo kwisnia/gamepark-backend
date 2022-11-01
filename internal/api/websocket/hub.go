@@ -17,8 +17,9 @@ type Hub struct {
 }
 
 type Message struct {
-	ID   uint
-	Data []byte
+	SenderID   uint
+	ReceiverID uint
+	Data       []byte
 }
 
 func newHub() *Hub {
@@ -43,7 +44,7 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.Send:
-			if client, ok := h.clients[message.ID]; ok {
+			if client, ok := h.clients[message.ReceiverID]; ok {
 
 				select {
 				case client.send <- message.Data:

@@ -7,17 +7,17 @@ import (
 	"net/http"
 )
 
-// MesssageType enum
-type MesssageType string
+// MessageType enum
+type MessageType string
 
 const (
 	// ChatMessage type
-	ChatMessage MesssageType = "chatMessage"
+	ChatMessage MessageType = "chatMessage"
 )
 
 type SocketMessage struct {
-	messageType MesssageType
-	data        map[string]any
+	MessageType MessageType            `json:"messageType"`
+	Data        map[string]interface{} `json:"data"`
 }
 
 var ClientHub = newHub()
@@ -40,14 +40,15 @@ func CreateConnection(w http.ResponseWriter, r *http.Request, userID uint) error
 	return nil
 }
 
-func VerifyIncomingMessage(message []byte) error {
+func VerifyIncomingMessage(message []byte) (*SocketMessage, error) {
 	parsedMessage := SocketMessage{}
 	err := json.Unmarshal(message, &parsedMessage)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if parsedMessage.messageType != ChatMessage {
-		return fmt.Errorf("invalid message type")
+	fmt.Println(parsedMessage.MessageType)
+	if parsedMessage.MessageType != ChatMessage {
+		return nil, fmt.Errorf("invalid message type")
 	}
-	return nil
+	return &parsedMessage, nil
 }

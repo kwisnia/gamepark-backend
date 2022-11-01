@@ -59,6 +59,7 @@ type Game struct {
 	Videos                []GameVideo       `gorm:"foreignKey:GameID" json:"videos"`
 	Lists                 []GameList        `gorm:"many2many:list_games" json:"lists"`
 	Reviews               []GameReview      `gorm:"foreignKey:Game;references:Slug" json:"reviews"`
+	Discussions           []GameDiscussion  `gorm:"foreignKey:Game;references:Slug" json:"discussions"`
 }
 
 type GameList struct {
