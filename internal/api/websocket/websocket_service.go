@@ -47,6 +47,7 @@ func VerifyIncomingMessage(message []byte) (*SocketMessage, error) {
 		return nil, err
 	}
 	fmt.Println(parsedMessage.MessageType)
+	fmt.Println(parsedMessage.Data)
 	if parsedMessage.MessageType != ChatMessage {
 		return nil, fmt.Errorf("invalid message type")
 	}

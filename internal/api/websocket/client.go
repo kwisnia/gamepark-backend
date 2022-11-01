@@ -79,7 +79,9 @@ func (c *Client) readPump() {
 			log.Println(err)
 			continue
 		}
+		fmt.Println(obj.Data)
 		if receiver, ok := obj.Data["receiver"].(float64); ok {
+			fmt.Println("Valid tresc")
 			err := chat.SaveNewMessage(c.userID, chat.MessageForm{
 				Receiver: uint(receiver),
 				Content:  obj.Data["content"].(string),
@@ -87,15 +89,20 @@ func (c *Client) readPump() {
 			if err != nil {
 				return
 			}
+
+			receiverMessageJSON, err := chat.PrepareWebSocketMessage(c.userID, obj.Data["content"].(string))
+			if err != nil {
+				return
+			}
 			c.hub.Send <- &Message{
 				SenderID:   c.userID,
 				ReceiverID: uint(receiver),
-				Data:       message,
+				Data:       receiverMessageJSON,
 			}
+			fmt.Println("After send")
 			confirmationMessage, err := json.Marshal(map[string]string{
 				"messageType": "successfulMessageSend",
 			})
-			fmt.Println("error marshala", err)
 			if err != nil {
 				return
 			}
