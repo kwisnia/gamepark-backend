@@ -11,6 +11,8 @@ type User struct {
 	Email                 string `gorm:"unique"`
 	Password              string
 	Username              string                               `gorm:"unique"`
+	FollowerCount         uint                                 `gorm:"default:0"`
+	FollowingCount        uint                                 `gorm:"default:0"`
 	UserProfile           UserProfile                          `gorm:"foreignkey:UserID"`
 	Lists                 []schema.GameList                    `gorm:"foreignkey:Owner;references:ID"`
 	Reviews               []schema.GameReview                  `gorm:"foreignkey:Creator;references:ID"`
@@ -18,6 +20,8 @@ type User struct {
 	Discussions           []schema.GameDiscussion              `gorm:"foreignkey:CreatorID;references:ID"`
 	Posts                 []schema.DiscussionPost              `gorm:"foreignkey:CreatorID;references:ID"`
 	CompletedAchievements []achievements.AchievementCompletion `gorm:"foreignkey:UserID;references:ID"`
+	Followers             []Following                          `gorm:"foreignkey:Followed;references:ID"`
+	Following             []Following                          `gorm:"foreignkey:UserID;references:ID"`
 }
 
 type UserProfile struct {
@@ -25,4 +29,6 @@ type UserProfile struct {
 	DisplayName string
 	UserID      uint
 	Avatar      *string
+	Bio         *string
+	Banner      *string
 }

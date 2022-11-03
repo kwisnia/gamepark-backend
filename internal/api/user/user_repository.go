@@ -11,8 +11,8 @@ func SaveNewUser(u *userschema.User) {
 	database.DB.Create(u)
 }
 
-func UpdateUser(u *userschema.User) {
-	database.DB.Session(&gorm.Session{FullSaveAssociations: true}).Save(u)
+func UpdateUser(u *userschema.User) error {
+	return database.DB.Session(&gorm.Session{FullSaveAssociations: true}).Save(u).Error
 }
 
 func GetByEmail(email string) *userschema.User {

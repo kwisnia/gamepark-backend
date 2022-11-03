@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kwisnia/inzynierka-backend/internal/api/chat"
 	"github.com/kwisnia/inzynierka-backend/internal/api/file"
+	"github.com/kwisnia/inzynierka-backend/internal/api/followers"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/lists"
@@ -30,10 +31,13 @@ func Setup() *gin.Engine {
 	r.GET("/games/:slug/info", games.GetGameShortInfoHandler)
 	r.GET("games/:slug/user", middleware.AuthRequired(), user_game_info.GetUserGameInfoHandler)
 	r.GET("/me/details", middleware.AuthRequired(), user.GetDetailsHandler)
+	r.PATCH("/me/details", middleware.AuthRequired(), user.UpdateUserProfileHandler)
 	r.GET("/:userName/details", user.GetDetailsByUsernameHandler)
 	r.GET("/:userName/lists", lists.GetUserListsHandler)
 	r.GET("/:userName/reviews", reviews.GetReviewsForUserHandler)
 	r.GET("/:userName/discussions", discussions.GetDiscussionsForUserHandler)
+	r.GET("/:userName/followers", followers.GetUserFollowersHandler)
+	r.GET("/:userName/following", followers.GetUserFollowingHandler)
 	r.POST("/:userName/avatar", middleware.AuthRequired(), user.UploadUserAvatarHandler)
 	r.GET("/list/:id", lists.GetUserListHandler)
 	r.POST("/list", middleware.AuthRequired(), lists.CreateListHandler)
@@ -52,6 +56,7 @@ func Setup() *gin.Engine {
 	r.GET("/chat/history", middleware.AuthRequired(), chat.GetChatReceiversHandler)
 	r.POST("/image", middleware.AuthRequired(), file.UploadImageHandler)
 	getDiscussionRoutes(r)
+	getFollowRoutes(r)
 	return r
 }
 
@@ -68,4 +73,11 @@ func getDiscussionRoutes(router *gin.Engine) {
 	discussionRoutes.DELETE("/:discussionId/posts/:postId", middleware.AuthRequired(), discussions.DeleteDiscussionPostHandler)
 	discussionRoutes.POST("/:discussionId/posts/:postId/score", middleware.AuthRequired(), discussions.ScoreDiscussionPostHandler)
 	discussionRoutes.GET("/:discussionId/posts/:postId/replies", middleware.AuthOptional(), discussions.GetDiscussionPostRepliesHandler)
+}
+
+func getFollowRoutes(router *gin.Engine) {
+	followRoutes := router.Group("/follow")
+	followRoutes.POST("/:userName", middleware.AuthRequired(), followers.FollowUserHandler)
+	followRoutes.DELETE("/:userName", middleware.AuthRequired(), followers.UnfollowUserHandler)
+	followRoutes.GET("/:userName", middleware.AuthRequired(), followers.CheckFollowConnectionHandler)
 }

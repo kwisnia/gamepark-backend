@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -21,13 +22,23 @@ type RegisterForm struct {
 	DisplayName string `json:"displayName"`
 }
 
+type ProfileEditForm struct {
+	DisplayName  string                `json:"displayName"`
+	Bio          string                `json:"bio"`
+	Banner       *multipart.FileHeader `json:"banner"`
+	Avatar       *multipart.FileHeader `json:"avatar"`
+	DeleteBanner bool                  `json:"deleteBanner"`
+}
+
 type DetailsResponse struct {
-	Email       string            `json:"email"`
-	Username    string            `json:"username"`
-	DisplayName string            `json:"displayName"`
-	ID          uint              `json:"id"`
-	Lists       []schema.GameList `json:"lists"`
-	Avatar      *string           `json:"avatar"`
+	Email          string            `json:"email"`
+	Username       string            `json:"username"`
+	DisplayName    string            `json:"displayName"`
+	ID             uint              `json:"id"`
+	Lists          []schema.GameList `json:"lists"`
+	Avatar         *string           `json:"avatar"`
+	FollowerCount  uint              `json:"followerCount"`
+	FollowingCount uint              `json:"followingCount"`
 }
 
 // register user
@@ -102,12 +113,11 @@ func GetDetailsHandler(c *gin.Context) {
 
 func GetDetailsByUsernameHandler(c *gin.Context) {
 	userName := c.Param("userName")
-	user := GetUserDetails(userName)
+	user := GetBasicUserDetailsByUsername(userName)
 	if user == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
 	}
-	user.Email = ""
 	c.JSON(http.StatusOK, user)
 }
 
@@ -150,4 +160,25 @@ func GetUsersHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, users)
+}
+
+func UpdateUserProfileHandler(c *gin.Context) {
+	var form ProfileEditForm
+	if err := c.ShouldBind(&form); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	userName := c.GetString("userName")
+	userID := c.GetUint("userID")
+	user := GetByUsername(userName)
+	if user == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
+		return
+	}
+	err := UpdateUserProfile(userID, userName, form)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated"})
 }

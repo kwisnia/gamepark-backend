@@ -53,3 +53,7 @@ func VerifyIncomingMessage(message []byte) (*SocketMessage, error) {
 	}
 	return &parsedMessage, nil
 }
+
+func GetConnections() map[uint]*Client {
+	return ClientHub.clients
+}

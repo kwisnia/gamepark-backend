@@ -15,3 +15,10 @@ func WebSockerConnectionHandler(c *gin.Context) {
 		return
 	}
 }
+
+func GetOnlineUsers(c *gin.Context) {
+	fmt.Println("GetOnlineUsers")
+	connections := GetConnections()
+	fmt.Println("connections", connections)
+	c.JSON(200, gin.H{"status": "success", "connections": connections})
+}
