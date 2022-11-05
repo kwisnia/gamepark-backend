@@ -13,6 +13,9 @@ type BasicUserDetails struct {
 	Avatar         *string `json:"avatar"`
 	FollowerCount  uint    `json:"followerCount"`
 	FollowingCount uint    `json:"followingCount"`
+	Bio            string  `json:"bio"`
+	Banner         *string `json:"banner"`
+	BannerPosition float32 `json:"bannerPosition"`
 }
 
 func GetUserDetails(userName string) *DetailsResponse {
@@ -21,12 +24,17 @@ func GetUserDetails(userName string) *DetailsResponse {
 		return nil
 	}
 	return &DetailsResponse{
-		Email:       user.Email,
-		Username:    user.Username,
-		DisplayName: user.UserProfile.DisplayName,
-		ID:          user.ID,
-		Lists:       user.Lists,
-		Avatar:      user.UserProfile.Avatar,
+		Email:          user.Email,
+		Username:       user.Username,
+		DisplayName:    user.UserProfile.DisplayName,
+		ID:             user.ID,
+		Lists:          user.Lists,
+		Avatar:         user.UserProfile.Avatar,
+		FollowerCount:  user.FollowerCount,
+		FollowingCount: user.FollowingCount,
+		Bio:            user.UserProfile.Bio,
+		Banner:         user.UserProfile.Banner,
+		BannerPosition: user.UserProfile.BannerPosition,
 	}
 }
 
@@ -42,6 +50,9 @@ func GetBasicUserDetailsByUsername(username string) *BasicUserDetails {
 		Avatar:         user.UserProfile.Avatar,
 		FollowerCount:  user.FollowerCount,
 		FollowingCount: user.FollowingCount,
+		Bio:            user.UserProfile.Bio,
+		Banner:         user.UserProfile.Banner,
+		BannerPosition: user.UserProfile.BannerPosition,
 	}
 }
 
@@ -57,6 +68,9 @@ func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
 		Avatar:         user.UserProfile.Avatar,
 		FollowerCount:  user.FollowerCount,
 		FollowingCount: user.FollowingCount,
+		Bio:            user.UserProfile.Bio,
+		Banner:         user.UserProfile.Banner,
+		BannerPosition: user.UserProfile.BannerPosition,
 	}
 }
 
@@ -95,6 +109,9 @@ func GetUsers(pageSize int, page int, search string) ([]BasicUserDetails, error)
 			Avatar:         user.UserProfile.Avatar,
 			FollowerCount:  user.FollowerCount,
 			FollowingCount: user.FollowingCount,
+			Bio:            user.UserProfile.Bio,
+			Banner:         user.UserProfile.Banner,
+			BannerPosition: user.UserProfile.BannerPosition,
 		}
 	}
 	return usersDetails, nil
@@ -109,6 +126,7 @@ func UpdateUserProfile(userID uint, username string, userProfileForm ProfileEdit
 		return fmt.Errorf("invalid permissions")
 	}
 	user.UserProfile.DisplayName = userProfileForm.DisplayName
+	user.UserProfile.Bio = userProfileForm.Bio
 	if userProfileForm.Avatar != nil {
 		avatarFilePath, err := uploader.UploadFile("gamepark-images", *userProfileForm.Avatar)
 		if err != nil {
@@ -123,8 +141,17 @@ func UpdateUserProfile(userID uint, username string, userProfileForm ProfileEdit
 		}
 		user.UserProfile.Banner = &bannerFilePath
 	}
-	if userProfileForm.DeleteBanner {
+	if userProfileForm.RemoveBanner {
 		user.UserProfile.Banner = nil
 	}
+	return UpdateUser(user)
+}
+
+func UpdateUserBannerPosition(userID uint, bannerPosition float32) error {
+	user := GetByID(userID)
+	if user == nil {
+		return fmt.Errorf("user not found")
+	}
+	user.UserProfile.BannerPosition = bannerPosition
 	return UpdateUser(user)
 }

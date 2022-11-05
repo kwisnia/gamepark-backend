@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"mime/multipart"
@@ -23,11 +25,15 @@ type RegisterForm struct {
 }
 
 type ProfileEditForm struct {
-	DisplayName  string                `json:"displayName"`
-	Bio          string                `json:"bio"`
-	Banner       *multipart.FileHeader `json:"banner"`
-	Avatar       *multipart.FileHeader `json:"avatar"`
-	DeleteBanner bool                  `json:"deleteBanner"`
+	DisplayName  string                `binding:"required" form:"displayName"`
+	Bio          string                `form:"bio"`
+	Banner       *multipart.FileHeader `form:"banner"`
+	Avatar       *multipart.FileHeader `form:"avatar"`
+	RemoveBanner bool                  `form:"removeBanner"`
+}
+
+type BannerPositionForm struct {
+	Position float32 `json:"position" binding:"required" binding:"min=0" binding:"max=100"`
 }
 
 type DetailsResponse struct {
@@ -38,7 +44,10 @@ type DetailsResponse struct {
 	Lists          []schema.GameList `json:"lists"`
 	Avatar         *string           `json:"avatar"`
 	FollowerCount  uint              `json:"followerCount"`
+	Bio            string            `json:"bio"`
 	FollowingCount uint              `json:"followingCount"`
+	Banner         *string           `json:"banner"`
+	BannerPosition float32           `json:"bannerPosition"`
 }
 
 // register user
@@ -164,10 +173,11 @@ func GetUsersHandler(c *gin.Context) {
 
 func UpdateUserProfileHandler(c *gin.Context) {
 	var form ProfileEditForm
-	if err := c.ShouldBind(&form); err != nil {
+	if err := c.ShouldBindWith(&form, binding.FormMultipart); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+	fmt.Println(form)
 	userName := c.GetString("userName")
 	userID := c.GetUint("userID")
 	user := GetByUsername(userName)
@@ -181,4 +191,25 @@ func UpdateUserProfileHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated"})
+}
+
+func UpdateUserBannerPositionHandler(c *gin.Context) {
+	var form BannerPositionForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	userName := c.GetString("userName")
+	userID := c.GetUint("userID")
+	user := GetByUsername(userName)
+	if user == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
+		return
+	}
+	err := UpdateUserBannerPosition(userID, form.Position)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Banner position updated"})
 }

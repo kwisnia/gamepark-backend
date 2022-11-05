@@ -90,7 +90,8 @@ func GetReviewsForGameHandler(c *gin.Context) {
 }
 
 func GetReviewsForUserHandler(c *gin.Context) {
-	username := c.Param("username")
+	username := c.Param("userName")
+	userID := c.GetUint("userID")
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
@@ -111,7 +112,7 @@ func GetReviewsForUserHandler(c *gin.Context) {
 			return
 		}
 	}
-	reviews, err := GetReviewsForUser(pageSize, page, parsedFilters, username)
+	reviews, err := GetReviewsForUser(pageSize, page, parsedFilters, username, userID)
 	c.JSON(http.StatusOK, reviews)
 }
 

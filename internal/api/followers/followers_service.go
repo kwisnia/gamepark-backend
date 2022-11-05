@@ -70,7 +70,7 @@ func GetUserFollowers(username string, pageSize int, page int) ([]user.BasicUser
 	return users, nil
 }
 
-func GetUserFollowing(username string, pageSize int, page int) ([]userschema.Following, error) {
+func GetUserFollowing(username string, pageSize int, page int) ([]user.BasicUserDetails, error) {
 	userCheck := user.GetByUsername(username)
 	if userCheck == nil {
 		return nil, fmt.Errorf("user not found")
@@ -82,13 +82,13 @@ func GetUserFollowing(username string, pageSize int, page int) ([]userschema.Fol
 	}
 	users := make([]user.BasicUserDetails, len(following))
 	for i, followingUser := range following {
-		userDetails := user.GetBasicUserDetailsByID(followingUser.UserID)
+		userDetails := user.GetBasicUserDetailsByID(followingUser.Followed)
 		if userDetails == nil {
 			return nil, fmt.Errorf("user not found")
 		}
 		users[i] = *userDetails
 	}
-	return following, nil
+	return users, nil
 }
 
 func CheckFollowConnection(userID uint, followUsername string) bool {

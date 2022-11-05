@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
+	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions/posts"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
@@ -26,6 +27,13 @@ type DiscussionListItemWithUserDetails struct {
 type DiscussionWithUserDetails struct {
 	schema.GameDiscussion
 	User       user.BasicUserDetails `json:"user"`
+	UserScore  int                   `json:"userScore"`
+	PostsCount int64                 `json:"postsCount"`
+}
+
+type DiscussionWithGameDetails struct {
+	schema.GameDiscussion
+	Game       games.GameListElement `json:"gameDetails"`
 	UserScore  int                   `json:"userScore"`
 	PostsCount int64                 `json:"postsCount"`
 }
@@ -54,16 +62,42 @@ func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (
 	return &discussion, nil
 }
 
-func GetDiscussionsForUser(pageSize int, page int, userID uint) ([]schema.GameDiscussion, error) {
-	discussionCreator := user.GetBasicUserDetailsByID(userID)
+func GetDiscussionsForUser(pageSize int, page int, username string, userID uint) ([]DiscussionWithGameDetails, error) {
+	discussionCreator := user.GetBasicUserDetailsByUsername(username)
 	if discussionCreator == nil {
 		return nil, fmt.Errorf("user not found")
 	}
-	discussions, err := GetByUserID(userID, pageSize, (page-1)*pageSize)
+	offset := (page - 1) * pageSize
+	discussions, err := GetByUserID(discussionCreator.ID, pageSize, offset)
+	discussionsWithGameDetails := make([]DiscussionWithGameDetails, len(discussions))
+	for i, discussion := range discussions {
+		game, err := games.GetGameShortInfoBySlug(discussion.Game)
+		if err != nil {
+			return nil, err
+		}
+		score, err := GetScoreByUserAndDiscussion(userID, discussion.ID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		scoreValue := 0
+		if score != nil {
+			scoreValue = score.Score
+		}
+		postsCount, err := posts.GetPostsCountForDiscussion(discussion.ID)
+		if err != nil {
+			return nil, err
+		}
+		discussionsWithGameDetails[i] = DiscussionWithGameDetails{
+			GameDiscussion: discussion,
+			Game:           game,
+			UserScore:      scoreValue,
+			PostsCount:     postsCount,
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
-	return discussions, nil
+	return discussionsWithGameDetails, nil
 }
 
 func GetDiscussionsForGame(pageSize int, page int, game string, userID uint) ([]DiscussionListItemWithUserDetails, error) {

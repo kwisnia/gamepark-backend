@@ -67,6 +67,8 @@ func CreateDiscussionHandler(c *gin.Context) {
 
 func GetDiscussionsForUserHandler(c *gin.Context) {
 	userID := c.GetUint("userID")
+	username := c.Param("userName")
+	fmt.Println("UserID", userID)
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid page size"})
@@ -77,7 +79,7 @@ func GetDiscussionsForUserHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid after"})
 		return
 	}
-	discussions, err := GetDiscussionsForUser(pageSize, page, userID)
+	discussions, err := GetDiscussionsForUser(pageSize, page, username, userID)
 	if err != nil {
 		var errorStatus int
 		if err.Error() == "user not found" {

@@ -18,6 +18,12 @@ type ReviewWithUserDetails struct {
 	MarkedAsHelpful bool                  `json:"markedAsHelpful"`
 }
 
+type ReviewWithGameDetails struct {
+	schema.GameReview
+	Game            games.GameListElement `json:"gameDetails"`
+	MarkedAsHelpful bool                  `json:"markedAsHelpful"`
+}
+
 func CreateReview(userID uint, gameSlug string, form ReviewForm) (*schema.GameReview, error) {
 	_, err := games.GetGameBySlug(gameSlug)
 	if err != nil {
@@ -62,16 +68,33 @@ func CreateReview(userID uint, gameSlug string, form ReviewForm) (*schema.GameRe
 	return review, nil
 }
 
-func GetReviewsForUser(pageSize int, page int, filters []int, username string) ([]schema.GameReview, error) {
+func GetReviewsForUser(pageSize int, page int, filters []int, username string, userID uint) ([]ReviewWithGameDetails, error) {
 	userCheck := user.GetByUsername(username)
 	if userCheck == nil {
 		return nil, fmt.Errorf("user not found")
 	}
-	userReviews, err := GetByUserID(userCheck.ID, pageSize, page, filters)
+	offset := (page - 1) * pageSize
+	userReviews, err := GetByUserID(userCheck.ID, pageSize, offset, filters)
 	if err != nil {
 		return nil, err
 	}
-	return userReviews, nil
+	reviewsWithGameDetails := make([]ReviewWithGameDetails, len(userReviews))
+	for i, review := range userReviews {
+		gameDetails, err := games.GetGameShortInfoBySlug(review.Game)
+		if err != nil {
+			return nil, err
+		}
+		_, err = GetHelpfulByUserAndReview(userID, review.ID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		reviewsWithGameDetails[i] = ReviewWithGameDetails{
+			GameReview:      review,
+			Game:            gameDetails,
+			MarkedAsHelpful: err == nil,
+		}
+	}
+	return reviewsWithGameDetails, nil
 }
 
 func GetReviewsForGame(pageSize int, page int, filters []int, gameSlug string, userID uint) ([]ReviewWithUserDetails, error) {

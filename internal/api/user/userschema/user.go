@@ -26,9 +26,10 @@ type User struct {
 
 type UserProfile struct {
 	gorm.Model
-	DisplayName string
-	UserID      uint
-	Avatar      *string
-	Bio         *string
-	Banner      *string
+	DisplayName    string
+	UserID         uint
+	Avatar         *string
+	Bio            string `gorm:"default:''"`
+	Banner         *string
+	BannerPosition float32 `gorm:"default:50"`
 }
