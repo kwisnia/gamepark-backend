@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/chat"
 	"github.com/kwisnia/inzynierka-backend/internal/api/file"
 	"github.com/kwisnia/inzynierka-backend/internal/api/followers"
@@ -39,7 +40,7 @@ func Setup() *gin.Engine {
 	r.GET("/:userName/discussions", middleware.AuthOptional(), discussions.GetDiscussionsForUserHandler)
 	r.GET("/:userName/followers", followers.GetUserFollowersHandler)
 	r.GET("/:userName/following", followers.GetUserFollowingHandler)
-	r.POST("/:userName/avatar", middleware.AuthRequired(), user.UploadUserAvatarHandler)
+	r.GET("/:userName/achievements", user.GetUserAchievementsHandler)
 	r.GET("/list/:id", lists.GetUserListHandler)
 	r.POST("/list", middleware.AuthRequired(), lists.CreateListHandler)
 	r.PATCH("/list/:id", middleware.AuthRequired(), lists.UpdateListHandler)
@@ -56,6 +57,7 @@ func Setup() *gin.Engine {
 	r.GET("/chat/:user", middleware.AuthRequired(), chat.GetChatHistoryHandler)
 	r.GET("/chat/history", middleware.AuthRequired(), chat.GetChatReceiversHandler)
 	r.POST("/image", middleware.AuthRequired(), file.UploadImageHandler)
+	r.GET("/achievements", achievements.GetAllAchievementsHandler)
 	getDiscussionRoutes(r)
 	getFollowRoutes(r)
 	return r

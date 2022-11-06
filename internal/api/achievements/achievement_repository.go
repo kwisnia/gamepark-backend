@@ -40,3 +40,13 @@ func getAchievementsScoreForUser(userID uint) int {
 	}
 	return score
 }
+
+func getAchievementsForUser(userID uint) ([]Achievement, error) {
+	var achievements []Achievement
+	if err := database.DB.Table("achievements").Select("achievements.*").
+		Joins("INNER JOIN achievement_completions ON achievements.id = achievement_completions.achievement_id").
+		Where("achievement_completions.user_id = ?", userID).Scan(&achievements).Error; err != nil {
+		return nil, err
+	}
+	return achievements, nil
+}

@@ -8,7 +8,6 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
-	"github.com/kwisnia/inzynierka-backend/internal/api/websocket"
 	"gorm.io/gorm"
 )
 
@@ -177,11 +176,6 @@ func MarkReviewAsHelpful(userID uint, reviewID uint) error {
 		})
 	}
 	go func() {
-		fmt.Println("Halo")
-		websocket.ClientHub.Send <- &websocket.Message{
-			ReceiverID: userID,
-			Data:       []byte("halo"),
-		}
 		userHelpfulCount, err := GetHelpfulCountForUser(userID)
 		if err != nil {
 			return

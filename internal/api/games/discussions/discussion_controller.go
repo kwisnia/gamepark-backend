@@ -216,6 +216,7 @@ func UpdateDiscussionPostHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+	fmt.Println("KURWA MAĆ GOLANG JEBAYN")
 	post, err := posts.UpdatePost(uint(postID), userID, posts.PostForm{
 		Body: postForm.Body,
 	})

@@ -2,6 +2,7 @@ package achievements
 
 import (
 	"encoding/json"
+	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 )
 
 func CompleteAchievement(userID uint, achievementID uint) error {
@@ -24,4 +25,16 @@ func PrepareWebSocketMessage(achievement Achievement) ([]byte, error) {
 		"messageType": "newAchievement",
 	}
 	return json.Marshal(receiverMessage)
+}
+
+func GetAllAchievements() []Achievement {
+	var achievements []Achievement
+	if err := database.DB.Find(&achievements).Error; err != nil {
+		return nil
+	}
+	return achievements
+}
+
+func GetAchievementsForUser(userID uint) ([]Achievement, error) {
+	return getAchievementsForUser(userID)
 }

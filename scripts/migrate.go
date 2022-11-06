@@ -50,4 +50,5 @@ func main() {
 	db.AutoMigrate(&achievements.AchievementCompletion{})
 	db.AutoMigrate(&userschema.Message{})
 	db.AutoMigrate(&userschema.Following{})
+	db.AutoMigrate(&userschema.UserFeatureUnlock{})
 }

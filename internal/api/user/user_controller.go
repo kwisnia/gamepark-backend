@@ -37,18 +37,19 @@ type BannerPositionForm struct {
 }
 
 type DetailsResponse struct {
-	Email          string            `json:"email"`
-	Username       string            `json:"username"`
-	DisplayName    string            `json:"displayName"`
-	ID             uint              `json:"id"`
-	Lists          []schema.GameList `json:"lists"`
-	Avatar         *string           `json:"avatar"`
-	FollowerCount  uint              `json:"followerCount"`
-	Bio            string            `json:"bio"`
-	FollowingCount uint              `json:"followingCount"`
-	Banner         *string           `json:"banner"`
-	BannerPosition float32           `json:"bannerPosition"`
-	UserScore      int               `json:"userScore"`
+	Email          string                       `json:"email"`
+	Username       string                       `json:"username"`
+	DisplayName    string                       `json:"displayName"`
+	ID             uint                         `json:"id"`
+	Lists          []schema.GameList            `json:"lists"`
+	Avatar         *string                      `json:"avatar"`
+	FollowerCount  uint                         `json:"followerCount"`
+	Bio            string                       `json:"bio"`
+	FollowingCount uint                         `json:"followingCount"`
+	Banner         *string                      `json:"banner"`
+	BannerPosition float32                      `json:"bannerPosition"`
+	UserScore      int                          `json:"userScore"`
+	UserUnlocks    userschema.UserFeatureUnlock `json:"userUnlocks"`
 }
 
 // register user
@@ -75,6 +76,12 @@ func RegisterUserHandler(c *gin.Context) {
 		UserProfile: userschema.UserProfile{
 			DisplayName: form.DisplayName,
 			Avatar:      nil,
+		},
+		UserFeatureUnlock: userschema.UserFeatureUnlock{
+			Banner:         false,
+			AnimatedAvatar: false,
+			AnimatedBanner: false,
+			Avatar:         true,
 		},
 	}
 	SaveNewUser(user)
@@ -131,27 +138,6 @@ func GetDetailsByUsernameHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func UploadUserAvatarHandler(c *gin.Context) {
-	file, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-	userName := c.GetString("userName")
-	userID := c.GetUint("userID")
-	user := GetByUsername(userName)
-	if user == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
-		return
-	}
-	err = UploadUserAvatar(userID, userName, file)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded"})
-}
-
 func GetUsersHandler(c *gin.Context) {
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "50"))
 	if err != nil {
@@ -188,6 +174,10 @@ func UpdateUserProfileHandler(c *gin.Context) {
 	}
 	err := UpdateUserProfile(userID, userName, form)
 	if err != nil {
+		if err.Error() == "invalid file type" {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid file type"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -213,4 +203,14 @@ func UpdateUserBannerPositionHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Banner position updated"})
+}
+
+func GetUserAchievementsHandler(c *gin.Context) {
+	userName := c.Param("userName")
+	achievements, err := GetUserAchievements(userName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, achievements)
 }

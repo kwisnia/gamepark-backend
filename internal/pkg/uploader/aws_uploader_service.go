@@ -12,6 +12,12 @@ import (
 
 func UploadFile(bucket string, file multipart.FileHeader) (string, error) {
 	fileContent, err := file.Open()
+	defer func(fileContent multipart.File) {
+		err := fileContent.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(fileContent)
 	if err != nil {
 		return "", err
 	}

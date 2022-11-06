@@ -25,7 +25,7 @@ func GetByEmail(email string) *userschema.User {
 
 func GetByUsername(username string) *userschema.User {
 	var u userschema.User
-	if err := database.DB.Preload("UserProfile").Preload("Lists").Where("username = ?", username).First(&u).Error; err != nil {
+	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("username = ?", username).First(&u).Error; err != nil {
 		return nil
 	}
 	return &u
@@ -33,7 +33,7 @@ func GetByUsername(username string) *userschema.User {
 
 func GetByID(id uint) *userschema.User {
 	var u userschema.User
-	if err := database.DB.Preload("UserProfile").Preload("Lists").Where("id = ?", id).First(&u).Error; err != nil {
+	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("id = ?", id).First(&u).Error; err != nil {
 		return nil
 	}
 	return &u

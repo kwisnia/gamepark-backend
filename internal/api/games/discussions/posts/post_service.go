@@ -7,7 +7,6 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
-	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
 )
 
@@ -23,15 +22,13 @@ type PostWithUserDetails struct {
 	ReplyCount int64                 `json:"replyCount"`
 }
 
-var policy = bluemonday.UGCPolicy()
-
 func CreatePost(userID uint, discussionID uint, postForm PostForm) (*schema.DiscussionPost, error) {
 	userCheck := user.GetBasicUserDetailsByID(userID)
 	if userCheck == nil {
 		return nil, fmt.Errorf("user not found")
 	}
 	post := schema.DiscussionPost{
-		Body:           policy.Sanitize(postForm.Body),
+		Body:           postForm.Body,
 		DiscussionID:   discussionID,
 		CreatorID:      userID,
 		OriginalPostID: postForm.OriginalPostID,
@@ -142,7 +139,7 @@ func UpdatePost(id uint, userID uint, postForm PostForm) (*schema.DiscussionPost
 	if post.CreatorID != userID {
 		return nil, fmt.Errorf("user is not the creator of this post")
 	}
-	post.Body = policy.Sanitize(postForm.Body)
+	post.Body = postForm.Body
 	if err := Update(post); err != nil {
 		return nil, err
 	}
