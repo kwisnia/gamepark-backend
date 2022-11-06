@@ -33,3 +33,11 @@ type UserProfile struct {
 	Banner         *string
 	BannerPosition float32 `gorm:"default:50"`
 }
+
+type UserFeatureUnlock struct {
+	gorm.Model
+	UserID         uint
+	Banner         bool
+	AnimatedAvatar bool
+	AnimatedBanner bool
+}

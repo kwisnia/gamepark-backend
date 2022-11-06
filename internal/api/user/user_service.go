@@ -2,6 +2,8 @@ package user
 
 import (
 	"fmt"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/uploader"
 	"mime/multipart"
 )
@@ -16,6 +18,7 @@ type BasicUserDetails struct {
 	Bio            string  `json:"bio"`
 	Banner         *string `json:"banner"`
 	BannerPosition float32 `json:"bannerPosition"`
+	UserScore      int     `json:"userScore"`
 }
 
 func GetUserDetails(userName string) *DetailsResponse {
@@ -35,6 +38,7 @@ func GetUserDetails(userName string) *DetailsResponse {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
+		UserScore:      achievements.GetTotalScoreForUser(user.ID),
 	}
 }
 
@@ -53,6 +57,7 @@ func GetBasicUserDetailsByUsername(username string) *BasicUserDetails {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
+		UserScore:      achievements.GetTotalScoreForUser(user.ID),
 	}
 }
 
@@ -71,6 +76,7 @@ func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
+		UserScore:      achievements.GetTotalScoreForUser(user.ID),
 	}
 }
 
@@ -112,6 +118,7 @@ func GetUsers(pageSize int, page int, search string) ([]BasicUserDetails, error)
 			Bio:            user.UserProfile.Bio,
 			Banner:         user.UserProfile.Banner,
 			BannerPosition: user.UserProfile.BannerPosition,
+			UserScore:      achievements.GetTotalScoreForUser(user.ID),
 		}
 	}
 	return usersDetails, nil
@@ -144,6 +151,7 @@ func UpdateUserProfile(userID uint, username string, userProfileForm ProfileEdit
 	if userProfileForm.RemoveBanner {
 		user.UserProfile.Banner = nil
 	}
+	go dispatcher.DispatchAchievementCheck(userID, achievements.ConditionTypeProfileFirstEdit, 1)
 	return UpdateUser(user)
 }
 

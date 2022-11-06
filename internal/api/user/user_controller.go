@@ -48,6 +48,7 @@ type DetailsResponse struct {
 	FollowingCount uint              `json:"followingCount"`
 	Banner         *string           `json:"banner"`
 	BannerPosition float32           `json:"bannerPosition"`
+	UserScore      int               `json:"userScore"`
 }
 
 // register user
