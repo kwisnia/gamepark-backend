@@ -9,7 +9,9 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions/posts"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
+	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
+	"regexp"
 )
 
 type DiscussionForm struct {
@@ -38,14 +40,25 @@ type DiscussionWithGameDetails struct {
 	PostsCount int64                 `json:"postsCount"`
 }
 
+var policy = bluemonday.UGCPolicy()
+
 func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (*schema.GameDiscussion, error) {
+	policy.AllowAttrs("data-youtube-video").OnElements("div")
+	policy.AllowElements("iframe")
+	policy.AllowAttrs("width").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("height").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("src").OnElements("iframe")
+	policy.AllowAttrs("frameborder").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("allow").Matching(regexp.MustCompile(`[a-z; -]*`)).OnElements("iframe")
+	policy.AllowAttrs("allowfullscreen").OnElements("iframe")
+
 	userCheck := user.GetBasicUserDetailsByID(userID)
 	if userCheck == nil {
 		return nil, fmt.Errorf("user not found")
 	}
 	discussion := schema.GameDiscussion{
 		Title:     discussionForm.Title,
-		Body:      discussionForm.Body,
+		Body:      policy.Sanitize(discussionForm.Body),
 		Game:      game,
 		CreatorID: userID,
 	}

@@ -7,7 +7,9 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
+	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
+	"regexp"
 )
 
 type PostForm struct {
@@ -22,13 +24,23 @@ type PostWithUserDetails struct {
 	ReplyCount int64                 `json:"replyCount"`
 }
 
+var policy = bluemonday.UGCPolicy()
+
 func CreatePost(userID uint, discussionID uint, postForm PostForm) (*schema.DiscussionPost, error) {
+	policy.AllowAttrs("data-youtube-video").OnElements("div")
+	policy.AllowElements("iframe")
+	policy.AllowAttrs("width").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("height").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("src").OnElements("iframe")
+	policy.AllowAttrs("frameborder").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("allow").Matching(regexp.MustCompile(`[a-z; -]*`)).OnElements("iframe")
+	policy.AllowAttrs("allowfullscreen").OnElements("iframe")
 	userCheck := user.GetBasicUserDetailsByID(userID)
 	if userCheck == nil {
 		return nil, fmt.Errorf("user not found")
 	}
 	post := schema.DiscussionPost{
-		Body:           postForm.Body,
+		Body:           policy.Sanitize(postForm.Body),
 		DiscussionID:   discussionID,
 		CreatorID:      userID,
 		OriginalPostID: postForm.OriginalPostID,
@@ -132,6 +144,14 @@ func DeletePost(id uint, userID uint) error {
 }
 
 func UpdatePost(id uint, userID uint, postForm PostForm) (*schema.DiscussionPost, error) {
+	policy.AllowAttrs("data-youtube-video").OnElements("div")
+	policy.AllowElements("iframe")
+	policy.AllowAttrs("width").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("height").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("src").OnElements("iframe")
+	policy.AllowAttrs("frameborder").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("allow").Matching(regexp.MustCompile(`[a-z; -]*`)).OnElements("iframe")
+	policy.AllowAttrs("allowfullscreen").OnElements("iframe")
 	post, err := GetByID(id)
 	if err != nil {
 		return nil, err
@@ -139,7 +159,7 @@ func UpdatePost(id uint, userID uint, postForm PostForm) (*schema.DiscussionPost
 	if post.CreatorID != userID {
 		return nil, fmt.Errorf("user is not the creator of this post")
 	}
-	post.Body = postForm.Body
+	post.Body = policy.Sanitize(postForm.Body)
 	if err := Update(post); err != nil {
 		return nil, err
 	}
