@@ -39,7 +39,7 @@ func GetUserDetails(userName string) *DetailsResponse {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
-		UserScore:      achievements.GetTotalScoreForUser(user.ID),
+		UserScore:      user.UserProfile.UserScore,
 		UserUnlocks:    user.UserFeatureUnlock,
 	}
 }
@@ -59,7 +59,7 @@ func GetBasicUserDetailsByUsername(username string) *BasicUserDetails {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
-		UserScore:      achievements.GetTotalScoreForUser(user.ID),
+		UserScore:      user.UserProfile.UserScore,
 		UserUnlocks:    user.UserFeatureUnlock,
 	}
 }
@@ -79,7 +79,7 @@ func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
 		Bio:            user.UserProfile.Bio,
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
-		UserScore:      achievements.GetTotalScoreForUser(user.ID),
+		UserScore:      user.UserProfile.UserScore,
 		UserUnlocks:    user.UserFeatureUnlock,
 	}
 }
@@ -102,7 +102,7 @@ func GetUsers(pageSize int, page int, search string) ([]BasicUserDetails, error)
 			Bio:            user.UserProfile.Bio,
 			Banner:         user.UserProfile.Banner,
 			BannerPosition: user.UserProfile.BannerPosition,
-			UserScore:      achievements.GetTotalScoreForUser(user.ID),
+			UserScore:      user.UserProfile.UserScore,
 		}
 	}
 	return usersDetails, nil
