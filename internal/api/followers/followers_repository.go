@@ -45,3 +45,11 @@ func GetFollowConnection(userID uint, followedID uint) (*userschema.Following, e
 	}
 	return &following, nil
 }
+
+func GetAllFollowingsByUser(userID uint) ([]userschema.Following, error) {
+	var followings []userschema.Following
+	if err := database.DB.Where("user_id = ?", userID).Find(&followings).Error; err != nil {
+		return nil, err
+	}
+	return followings, nil
+}

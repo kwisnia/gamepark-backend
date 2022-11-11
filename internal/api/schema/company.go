@@ -17,13 +17,13 @@ type CompanyLogo struct {
 
 type Company struct {
 	gorm.Model       `json:"-"`
-	ChangedCompanyID *uint             `json:"changedCompanyID"`
-	ChangedCompany   *Company          `json:"changedCompany"`
-	CompanyLogo      CompanyLogo       `json:"companyLogo"`
+	ChangedCompanyID *uint             `json:"-"`
+	ChangedCompany   *Company          `json:"-"`
+	CompanyLogo      CompanyLogo       `json:"-"`
 	Name             string            `json:"name"`
-	Description      *string           `json:"description"`
+	Description      *string           `json:"-"`
 	Slug             string            `json:"slug"`
-	StartDate        time.Time         `json:"startDate"`
+	StartDate        time.Time         `json:"-"`
 	IGDBUrl          string            `json:"igdbUrl"`
-	GamesInvolved    []InvolvedCompany `json:"gamesInvolved"`
+	GamesInvolved    []InvolvedCompany `json:"-"`
 }

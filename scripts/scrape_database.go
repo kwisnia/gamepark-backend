@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/kwisnia/igdb/v2"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
@@ -25,10 +26,16 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	client = igdb.NewClient(os.Getenv("IGDB_CLIENT_ID"), os.Getenv("IGDB_ACCESS_TOKEN"), nil)
 	database.SetupDB()
 	db = database.DB
 	db.Find(&externalCategories)
-	//clearDatabase()
+	_, err = client.Games.Get(1, igdb.ComposeOptions(igdb.SetFields("name")))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	clearDatabase()
 	//err = fetchCompanies()
 	//if err != nil {
 	//	logger.Fatal(err)
@@ -37,9 +44,14 @@ func main() {
 	//if err != nil {
 	//	logger.Fatal(err)
 	//}
-	err = fetchGames(112500)
+	//err = fetchGames(112500)
+	//if err != nil {
+	//	logger.Fatal(err)
+	//}
+	fmt.Println("huh")
+	err = associateSimilarGames()
 	if err != nil {
-		logger.Fatal(err)
+		return
 	}
 }
 
@@ -571,77 +583,124 @@ func filterExternalCategories(externalGames []igdb.ExternalGameWrapper) []igdb.E
 
 func associateSimilarGames() error {
 	gamesCount, err := client.Games.Count()
+	fmt.Println("Games count: ", gamesCount)
 	if err != nil {
 		return err
 	}
 	for i := 0; i < gamesCount; i += 500 {
+		fmt.Println("Processing games from ", i, " to ", i+500)
 		opts := igdb.ComposeOptions(
 			igdb.SetLimit(500),
 			igdb.SetFields("similar_games"),
 			igdb.SetOrder("id", igdb.OrderAscending),
 			igdb.SetOffset(i),
 		)
-		_, err := client.Games.Index(opts)
+		igdbGames, err := client.Games.Index(opts)
 		if err != nil {
 			return err
 		}
-		//for _, igdbGame := range igdbGames {
-		//	var game games.Game
-		//	association := db.Model(&game).Association("SimilarGames")
-		//	if association.Error != nil {
-		//		return association.Error
-		//	}
-		//	dbSimilarGames
-		//	association.Find()
-		//}
+		for _, igdbGame := range igdbGames {
+			var game schema.Game
+			dbGame := db.Model(&game).Where("id = ?", igdbGame.ID).First(&game)
+			if dbGame.Error != nil {
+				if errors.Is(dbGame.Error, gorm.ErrRecordNotFound) {
+					continue
+				}
+				return dbGame.Error
+			}
+			association := db.Model(&game).Association("SimilarGames")
+			if association.Error != nil {
+				return association.Error
+			}
+			for _, similarGame := range igdbGame.SimilarGames {
+				var similarGameModel schema.Game
+				existingGameCheck := db.Model(&game).Where("id = ?", similarGame.ID).First(&similarGameModel)
+				if existingGameCheck.Error != nil {
+					if errors.Is(existingGameCheck.Error, gorm.ErrRecordNotFound) {
+						continue
+					}
+					return existingGameCheck.Error
+				}
+				var test schema.Game
+				existingAssociation := db.Model(&game).Where("id = ?", similarGame.ID).Association("SimilarGames").Find(&test)
+				if existingAssociation != nil {
+					if !errors.Is(existingAssociation, gorm.ErrRecordNotFound) {
+						return existingAssociation
+					}
+				}
+				if test.ID != 0 {
+					continue
+				}
+				existingAssociation = db.Model(&similarGameModel).Where("id = ?", game.ID).Association("SimilarGames").Find(&test)
+				if existingAssociation != nil {
+					if !errors.Is(existingAssociation, gorm.ErrRecordNotFound) {
+						return existingAssociation
+					}
+				}
+				if test.ID != 0 {
+					continue
+				}
+				err := association.Append(&schema.Game{
+					Model: gorm.Model{
+						ID: uint(similarGame.ID),
+					},
+				})
+				if err != nil {
+					fmt.Println("Error appending similar game: ", err)
+				}
+			}
+		}
 	}
 	return nil
 }
 
 func clearDatabase() {
-	if result := db.Exec("DELETE FROM game_platforms"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM platform_logos"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM platforms"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM release_dates"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM artworks"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	//db.Exec("DELETE FROM companies")
-	//db.Exec("DELETE FROM company_logos")
-	if result := db.Exec("DELETE FROM covers"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM external_games"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM game_age_ratings"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM game_genres"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
+	//if result := db.Exec("DELETE FROM game_platforms"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM platform_logos"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM platforms"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM release_dates"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM artworks"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	////db.Exec("DELETE FROM companies")
+	////db.Exec("DELETE FROM company_logos")
+	//if result := db.Exec("DELETE FROM covers"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM external_games"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM game_age_ratings"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM game_genres"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM game_similar_games"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM game_videos"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM games"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	////db.Exec("DELETE FROM genres")
+	//if result := db.Exec("DELETE FROM involved_companies"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
+	//if result := db.Exec("DELETE FROM screenshots"); result.Error != nil {
+	//	logger.Fatal(result.Error)
+	//}
 	if result := db.Exec("DELETE FROM game_similar_games"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM game_videos"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM games"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	//db.Exec("DELETE FROM genres")
-	if result := db.Exec("DELETE FROM involved_companies"); result.Error != nil {
-		logger.Fatal(result.Error)
-	}
-	if result := db.Exec("DELETE FROM screenshots"); result.Error != nil {
 		logger.Fatal(result.Error)
 	}
 }

@@ -1,7 +1,6 @@
 package discussions
 
 import (
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
@@ -23,7 +22,6 @@ func Save(r *schema.GameDiscussion) error {
 }
 
 func GetPageQuery(pageSize int, offset int) *gorm.DB {
-	fmt.Println(offset)
 	query := database.DB.Model(&schema.GameDiscussion{}).
 		Limit(pageSize).Offset(offset).Order("created_at ASC")
 
@@ -45,6 +43,14 @@ func GetByGameSlug(slug string, pageSize int, offset int) ([]GameDiscussionListI
 		return nil, err
 	}
 	return discussions, nil
+}
+
+func GetShortInfo(id uint) (*GameDiscussionListItem, error) {
+	var discussion GameDiscussionListItem
+	if err := database.DB.Model(&schema.GameDiscussion{}).Where("id = ?", id).First(&discussion).Error; err != nil {
+		return nil, err
+	}
+	return &discussion, nil
 }
 
 func GetByUserID(userID uint, pageSize int, offset int) ([]schema.GameDiscussion, error) {

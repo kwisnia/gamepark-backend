@@ -3,23 +3,21 @@ package user
 import (
 	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
-	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/uploader"
 	"net/http"
 )
 
 type BasicUserDetails struct {
-	Username       string                       `json:"username"`
-	DisplayName    string                       `json:"displayName"`
-	ID             uint                         `json:"id"`
-	Avatar         *string                      `json:"avatar"`
-	FollowerCount  uint                         `json:"followerCount"`
-	FollowingCount uint                         `json:"followingCount"`
-	Bio            string                       `json:"bio"`
-	Banner         *string                      `json:"banner"`
-	BannerPosition float32                      `json:"bannerPosition"`
-	UserScore      int                          `json:"userScore"`
-	UserUnlocks    userschema.UserFeatureUnlock `json:"userUnlocks"`
+	Username       string  `json:"username"`
+	DisplayName    string  `json:"displayName"`
+	ID             uint    `json:"id"`
+	Avatar         *string `json:"avatar"`
+	FollowerCount  uint    `json:"followerCount"`
+	FollowingCount uint    `json:"followingCount"`
+	Bio            string  `json:"bio"`
+	Banner         *string `json:"banner"`
+	BannerPosition float32 `json:"bannerPosition"`
+	UserScore      int     `json:"userScore"`
 }
 
 func GetUserDetails(userName string) *DetailsResponse {
@@ -60,7 +58,6 @@ func GetBasicUserDetailsByUsername(username string) *BasicUserDetails {
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
 		UserScore:      user.UserProfile.UserScore,
-		UserUnlocks:    user.UserFeatureUnlock,
 	}
 }
 
@@ -80,7 +77,6 @@ func GetBasicUserDetailsByID(userID uint) *BasicUserDetails {
 		Banner:         user.UserProfile.Banner,
 		BannerPosition: user.UserProfile.BannerPosition,
 		UserScore:      user.UserProfile.UserScore,
-		UserUnlocks:    user.UserFeatureUnlock,
 	}
 }
 

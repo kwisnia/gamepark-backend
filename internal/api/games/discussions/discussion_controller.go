@@ -50,8 +50,6 @@ func CreateDiscussionHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	fmt.Println(discussionForm.Title)
-	fmt.Println(discussionForm.Body)
 	discussion, err := CreateDiscussion(userID, gameSlug, DiscussionForm{
 		Title: discussionForm.Title,
 		Body:  discussionForm.Body,

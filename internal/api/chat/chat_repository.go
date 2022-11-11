@@ -1,14 +1,12 @@
 package chat
 
 import (
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 )
 
 func GetPageQuery(pageSize int, offset int) *gorm.DB {
-	fmt.Println(offset)
 	query := database.DB.Model(&userschema.Message{}).
 		Limit(pageSize).Offset(offset).Order("created_at DESC")
 	return query
@@ -34,6 +32,5 @@ func GetUniqueUserChatHistory(userID uint) ([]uint, error) {
 	if err := database.DB.Raw("SELECT DISTINCT sender_id FROM messages WHERE receiver_id = ? UNION SELECT DISTINCT receiver_id FROM messages WHERE sender_id = ?", userID, userID).Scan(&users).Error; err != nil {
 		return nil, err
 	}
-	fmt.Println("Wszystko git")
 	return users, nil
 }

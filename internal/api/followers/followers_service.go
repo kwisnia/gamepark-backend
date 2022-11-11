@@ -42,7 +42,6 @@ func UnfollowUser(userID uint, followUsername string) error {
 	if followCheck == nil {
 		return nil
 	}
-	fmt.Println("Znalazło follow, usuwam")
 	if err = DeleteFollowing(followCheck); err != nil {
 		return err
 	}
@@ -104,4 +103,8 @@ func CheckFollowConnection(userID uint, followUsername string) bool {
 		return false
 	}
 	return true
+}
+
+func GetAllFollowingsForUser(userID uint) ([]userschema.Following, error) {
+	return GetAllFollowingsByUser(userID)
 }

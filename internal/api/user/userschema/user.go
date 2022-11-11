@@ -1,8 +1,8 @@
 package userschema
 
 import (
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/dashboard/activity"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"gorm.io/gorm"
 )
@@ -28,6 +28,7 @@ type User struct {
 	CompletedAchievements []achievements.AchievementCompletion `gorm:"foreignkey:UserID;references:ID"`
 	Followers             []Following                          `gorm:"foreignkey:Followed;references:ID"`
 	Following             []Following                          `gorm:"foreignkey:UserID;references:ID"`
+	Activities            []activity.UserActivity              `gorm:"foreignkey:UserID;references:ID"`
 }
 
 type UserProfile struct {
@@ -50,21 +51,21 @@ type UserFeatureUnlock struct {
 	AnimatedBanner bool `gorm:"default:false" json:"animatedBanner"`
 }
 
-func (userProfile *User) AfterUpdate(tx *gorm.DB) (err error) {
-	// check if score passed the threshholds
-	userUnlocks := UserFeatureUnlock{}
-	tx.Where("user_id = ?", userProfile.ID).First(&userUnlocks)
-	fmt.Println("am I here?")
-	fmt.Println(userUnlocks.UserID)
-	fmt.Println("userScore", userProfile.UserProfile.UserScore)
-	if userProfile.UserProfile.UserScore >= BannerUnlock {
-		userUnlocks.Banner = true
-	}
-	if userProfile.UserProfile.UserScore >= AnimatedAvatarUnlock {
-		userUnlocks.AnimatedAvatar = true
-	}
-	if userProfile.UserProfile.UserScore >= AnimatedBannerUnlock {
-		userUnlocks.AnimatedBanner = true
-	}
-	return tx.Save(&userUnlocks).Error
-}
+//func (userProfile *User) AfterUpdate(tx *gorm.DB) (err error) {
+//	// check if score passed the threshholds
+//	userUnlocks := UserFeatureUnlock{}
+//	tx.Where("user_id = ?", userProfile.ID).First(&userUnlocks)
+//	fmt.Println("am I here?")
+//	fmt.Println(userUnlocks.UserID)
+//	fmt.Println("userScore", userProfile.UserProfile.UserScore)
+//	if userProfile.UserProfile.UserScore >= BannerUnlock {
+//		userUnlocks.Banner = true
+//	}
+//	if userProfile.UserProfile.UserScore >= AnimatedAvatarUnlock {
+//		userUnlocks.AnimatedAvatar = true
+//	}
+//	if userProfile.UserProfile.UserScore >= AnimatedBannerUnlock {
+//		userUnlocks.AnimatedBanner = true
+//	}
+//	return tx.Save(&userUnlocks).Error
+//}

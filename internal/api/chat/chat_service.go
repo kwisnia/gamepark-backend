@@ -19,7 +19,6 @@ func GetChatHistory(requestingUser uint, secondUser string, pageSize int, page i
 
 func GetUsersChatReceivers(userID uint) ([]user.BasicUserDetails, error) {
 	uniqueUsers, err := GetUniqueUserChatHistory(userID)
-	fmt.Println("usery", len(uniqueUsers))
 	if err != nil {
 		return nil, err
 	}

@@ -19,47 +19,47 @@ type Genre struct {
 
 type Game struct {
 	gorm.Model            `json:"-"`
-	AgeRatings            []GameAgeRating   `gorm:"foreignKey:GameID" json:"ageRatings"`
+	AgeRatings            []GameAgeRating   `gorm:"foreignKey:GameID" json:"-"`
 	AggregatedRating      float64           `json:"aggregatedRating"`
 	AggregatedRatingCount int               `json:"aggregatedRatingCount"`
 	Artworks              []Artwork         `gorm:"foreignKey:GameID" json:"artworks"`
-	Category              GameCategory      `gorm:"foreignKey:CategoryID" json:"category"`
+	Category              GameCategory      `gorm:"foreignKey:CategoryID" json:"-"`
 	CategoryID            uint              `json:"-"`
 	Cover                 Cover             `gorm:"foreignKey:GameID" json:"cover,omitempty"`
-	DLCs                  []Game            `gorm:"foreignKey:DLCBaseReference" json:"dlcs"`
+	DLCs                  []Game            `gorm:"foreignKey:DLCBaseReference" json:"-"`
 	DLCBaseReference      *uint             `json:"-"`
-	ExpandedGames         []Game            `gorm:"foreignKey:ExpandedGameReference" json:"expandedGames"`
+	ExpandedGames         []Game            `gorm:"foreignKey:ExpandedGameReference" json:"-"`
 	ExpandedGameReference *uint             `json:"-"`
-	Expansions            []Game            `gorm:"foreignKey:ExpansionReference" json:"expansions"`
+	Expansions            []Game            `gorm:"foreignKey:ExpansionReference" json:"-"`
 	ExpansionReference    *uint             `json:"-"`
-	ExternalGames         []ExternalGame    `gorm:"foreignKey:GameID" json:"externalGames"`
+	ExternalGames         []ExternalGame    `gorm:"foreignKey:GameID" json:"-"`
 	FirstReleaseDate      time.Time         `json:"firstReleaseDate"`
 	Genres                []Genre           `gorm:"many2many:game_genres" json:"genres"`
 	InvolvedCompanies     []InvolvedCompany `gorm:"foreignKey:GameID" json:"involvedCompanies"`
 	Name                  string            `json:"name"`
-	ParentGame            *Game             `gorm:"foreignKey:ParentGameID" json:"parentGame"`
+	ParentGame            *Game             `gorm:"foreignKey:ParentGameID" json:"-"`
 	ParentGameID          *uint             `json:"-"`
-	Platforms             []Platform        `gorm:"many2many:game_platforms" json:"platforms"`
+	Platforms             []Platform        `gorm:"many2many:game_platforms" json:"-"`
 	Rating                float64           `json:"rating"`
 	RatingCount           int               `json:"ratingCount"`
-	ReleaseDates          []ReleaseDate     `gorm:"foreignKey:GameID" json:"releaseDates"`
-	Remakes               []Game            `gorm:"foreignKey:RemakeBaseReference" json:"remakes"`
+	ReleaseDates          []ReleaseDate     `gorm:"foreignKey:GameID" json:"-"`
+	Remakes               []Game            `gorm:"foreignKey:RemakeBaseReference" json:"-"`
 	RemakeBaseReference   *uint             `json:"-"`
-	Remasters             []Game            `gorm:"foreignKey:RemasterBaseReference" json:"remasters"`
+	Remasters             []Game            `gorm:"foreignKey:RemasterBaseReference" json:"-"`
 	RemasterBaseReference *uint             `json:"-"`
 	Screenshots           []Screenshot      `gorm:"foreignKey:GameID" json:"screenshots"`
-	SimilarGames          []Game            `gorm:"many2many:game_similar_games;" json:"similarGames"`
+	SimilarGames          []Game            `gorm:"many2many:game_similar_games;" json:"-"`
 	Slug                  string            `json:"slug" gorm:"unique"`
 	Storyline             string            `json:"storyline"`
 	Summary               string            `json:"summary"`
 	IGDBUrl               string            `json:"igdbUrl"`
-	VersionParent         *Game             `json:"versionParent"`
+	VersionParent         *Game             `json:"-"`
 	VersionParentID       *uint             `json:"-"`
-	VersionTitle          string            `json:"versionTitle"`
+	VersionTitle          string            `json:"-"`
 	Videos                []GameVideo       `gorm:"foreignKey:GameID" json:"videos"`
-	Lists                 []GameList        `gorm:"many2many:list_games" json:"lists"`
-	Reviews               []GameReview      `gorm:"foreignKey:Game;references:Slug" json:"reviews"`
-	Discussions           []GameDiscussion  `gorm:"foreignKey:Game;references:Slug" json:"discussions"`
+	Lists                 []GameList        `gorm:"many2many:list_games" json:"-"`
+	Reviews               []GameReview      `gorm:"foreignKey:Game;references:Slug" json:"-"`
+	Discussions           []GameDiscussion  `gorm:"foreignKey:Game;references:Slug" json:"-"`
 }
 
 type GameList struct {
@@ -72,4 +72,9 @@ type GameList struct {
 	AvatarUrl   string         `json:"avatarUrl"`
 	Owner       uint           `json:"owner"`
 	Games       []Game         `gorm:"many2many:list_games;" json:"games"`
+}
+
+type GameSimilarGame struct {
+	GameID        uint `gorm:"primarykey"`
+	SimilarGameID uint `gorm:"primarykey"`
 }

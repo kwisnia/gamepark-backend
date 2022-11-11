@@ -93,3 +93,12 @@ func CountHelpfulByUser(userID uint) (int64, error) {
 	}
 	return count, nil
 }
+
+func GetNewestReviewsByUsers(userIDs []uint, pageSize int, offset int) ([]schema.GameReview, error) {
+	var r []schema.GameReview
+	query := GetPageQuery(pageSize, offset, []int{}).Where("creator IN ?", userIDs)
+	if err := query.Find(&r).Error; err != nil {
+		return nil, err
+	}
+	return r, nil
+}

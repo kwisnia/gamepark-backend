@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
+	"github.com/kwisnia/inzynierka-backend/internal/api/dashboard/activity"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games/discussions/posts"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
@@ -65,6 +66,12 @@ func CreateDiscussion(userID uint, game string, discussionForm DiscussionForm) (
 	if err := Save(&discussion); err != nil {
 		return nil, err
 	}
+	err := activity.CreateNewActivity(userID, activity.NewDiscussion, map[string]interface{}{
+		"discussionID": discussion.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
 	go func() {
 		userDiscussionCount, err := GetDiscussionCountForUser(userID)
 		if err != nil {
@@ -111,6 +118,43 @@ func GetDiscussionsForUser(pageSize int, page int, username string, userID uint)
 		return nil, err
 	}
 	return discussionsWithGameDetails, nil
+}
+
+func GetDiscussionShortInfo(discussionID uint) (*GameDiscussionListItem, error) {
+	discussion, err := GetShortInfo(discussionID)
+	if err != nil {
+		return nil, err
+	}
+	return discussion, nil
+}
+
+func GetDiscussionWithGameDetails(discussionID uint, userID uint) (*DiscussionWithGameDetails, error) {
+	discussion, err := GetByID(discussionID)
+	if err != nil {
+		return nil, err
+	}
+	game, err := games.GetGameShortInfoBySlug(discussion.Game)
+	if err != nil {
+		return nil, err
+	}
+	score, err := GetScoreByUserAndDiscussion(userID, discussion.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	scoreValue := 0
+	if score != nil {
+		scoreValue = score.Score
+	}
+	postsCount, err := posts.GetPostsCountForDiscussion(discussion.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &DiscussionWithGameDetails{
+		GameDiscussion: *discussion,
+		Game:           game,
+		UserScore:      scoreValue,
+		PostsCount:     postsCount,
+	}, nil
 }
 
 func GetDiscussionsForGame(pageSize int, page int, game string, userID uint) ([]DiscussionListItemWithUserDetails, error) {

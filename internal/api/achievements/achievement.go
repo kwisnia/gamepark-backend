@@ -1,7 +1,6 @@
 package achievements
 
 import (
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
 	"time"
@@ -47,7 +46,6 @@ func (ac *AchievementCompletion) AfterCreate(tx *gorm.DB) (err error) {
 	if err := tx.First(&achievement, ac.AchievementID).Error; err != nil {
 		return err
 	}
-	fmt.Println("To się robi?", ac.UserID)
 	err = database.DB.Exec("UPDATE user_profiles SET user_score = user_score + ? WHERE user_id = ?", achievement.Points, ac.UserID).Error
 	if err != nil {
 		return err

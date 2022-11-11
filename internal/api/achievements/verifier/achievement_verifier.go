@@ -1,13 +1,11 @@
 package verifier
 
 import (
-	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 )
 
 func VerifyCountAchievements(userID uint, conditionType achievements.ConditionType, count int64) ([]achievements.Achievement, error) {
 	notCompletedAchievements := achievements.GetNotCompletedAchievementsForType(userID, conditionType)
-	fmt.Println(len(notCompletedAchievements))
 	completedAchievements := make([]achievements.Achievement, 0)
 	for _, achievement := range notCompletedAchievements {
 		if count >= int64(achievement.ConditionValue) {

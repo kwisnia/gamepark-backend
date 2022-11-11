@@ -36,6 +36,15 @@ func GetPage(pageSize int, offset int, filters []int, order string, search strin
 	return games, nil
 }
 
+func GetSimilarGames(id uint) ([]schema2.GameSimilarGame, error) {
+	// get ids of games from game_similar_games where game_id = id or similar_game_id = id
+	var similarGames []schema2.GameSimilarGame
+	if err := database.DB.Table("game_similar_games").Where("game_id = ? OR similar_game_id = ?", id, id).Find(&similarGames).Error; err != nil {
+		return nil, err
+	}
+	return similarGames, nil
+}
+
 func GetGameBySlug(slug string) (schema2.Game, error) {
 	game := schema2.Game{}
 	if err := database.DB.Preload("ExternalGames.Category").Preload("InvolvedCompanies.Company").Preload(clause.Associations).Where("slug = ?", slug).First(&game).Error; err != nil {
@@ -58,4 +67,12 @@ func GetGameShortInfoBySlug(slug string) (GameListElement, error) {
 		return game, err
 	}
 	return game, nil
+}
+
+func GetGameShortInfosByIds(ids []uint) ([]GameListElement, error) {
+	var games []GameListElement
+	if err := database.DB.Model(&schema2.Game{}).Preload("Cover").Where("id IN ?", ids).Find(&games).Error; err != nil {
+		return nil, err
+	}
+	return games, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements/dispatcher"
+	"github.com/kwisnia/inzynierka-backend/internal/api/dashboard/activity"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user"
@@ -19,6 +20,13 @@ type ReviewWithUserDetails struct {
 
 type ReviewWithGameDetails struct {
 	schema.GameReview
+	Game            games.GameListElement `json:"gameDetails"`
+	MarkedAsHelpful bool                  `json:"markedAsHelpful"`
+}
+
+type ReviewWithUserAndGameDetails struct {
+	schema.GameReview
+	User            user.BasicUserDetails `json:"user"`
 	Game            games.GameListElement `json:"gameDetails"`
 	MarkedAsHelpful bool                  `json:"markedAsHelpful"`
 }
@@ -54,6 +62,12 @@ func CreateReview(userID uint, gameSlug string, form ReviewForm) (*schema.GameRe
 		review.GameCompletionID = form.GameCompletionID
 	}
 	err = Save(review)
+	if err != nil {
+		return nil, err
+	}
+	err = activity.CreateNewActivity(userID, activity.NewReview, map[string]interface{}{
+		"reviewID": review.ID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -218,4 +232,19 @@ func GetHelpfulCountForUser(userID uint) (int64, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func GetReviewWithGameDetailsById(reviewID uint) (*ReviewWithGameDetails, error) {
+	review, err := GetByID(reviewID)
+	if err != nil {
+		return nil, err
+	}
+	gameDetails, err := games.GetGameShortInfoBySlug(review.Game)
+	if err != nil {
+		return nil, err
+	}
+	return &ReviewWithGameDetails{
+		GameReview: *review,
+		Game:       gameDetails,
+	}, nil
 }

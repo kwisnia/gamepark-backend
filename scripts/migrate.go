@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
+	"github.com/kwisnia/inzynierka-backend/internal/api/dashboard/activity"
 	"github.com/kwisnia/inzynierka-backend/internal/api/schema"
 	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
@@ -51,4 +52,5 @@ func main() {
 	db.AutoMigrate(&userschema.Message{})
 	db.AutoMigrate(&userschema.Following{})
 	db.AutoMigrate(&userschema.UserFeatureUnlock{})
+	db.AutoMigrate(&activity.UserActivity{})
 }

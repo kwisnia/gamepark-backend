@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kwisnia/inzynierka-backend/internal/api/achievements"
 	"github.com/kwisnia/inzynierka-backend/internal/api/chat"
+	"github.com/kwisnia/inzynierka-backend/internal/api/dashboard"
 	"github.com/kwisnia/inzynierka-backend/internal/api/file"
 	"github.com/kwisnia/inzynierka-backend/internal/api/followers"
 	"github.com/kwisnia/inzynierka-backend/internal/api/games"
@@ -58,6 +59,7 @@ func Setup() *gin.Engine {
 	r.GET("/chat/history", middleware.AuthRequired(), chat.GetChatReceiversHandler)
 	r.POST("/image", middleware.AuthRequired(), file.UploadImageHandler)
 	r.GET("/achievements", achievements.GetAllAchievementsHandler)
+	r.GET("/dashboard", middleware.AuthRequired(), dashboard.GetActivitiesFromFollowedHandler)
 	getDiscussionRoutes(r)
 	getFollowRoutes(r)
 	return r
