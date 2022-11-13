@@ -7,10 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const BannerUnlock = 10
-const AnimatedAvatarUnlock = 20
-const AnimatedBannerUnlock = 35
-
 type User struct {
 	gorm.Model
 	Email                 string `gorm:"unique"`

@@ -234,7 +234,7 @@ func GetHelpfulCountForUser(userID uint) (int64, error) {
 	return count, nil
 }
 
-func GetReviewWithGameDetailsById(reviewID uint) (*ReviewWithGameDetails, error) {
+func GetReviewWithGameDetailsById(reviewID uint, userID uint) (*ReviewWithGameDetails, error) {
 	review, err := GetByID(reviewID)
 	if err != nil {
 		return nil, err
@@ -243,8 +243,13 @@ func GetReviewWithGameDetailsById(reviewID uint) (*ReviewWithGameDetails, error)
 	if err != nil {
 		return nil, err
 	}
+	_, err = GetHelpfulByUserAndReview(userID, review.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
 	return &ReviewWithGameDetails{
-		GameReview: *review,
-		Game:       gameDetails,
+		GameReview:      *review,
+		Game:            gameDetails,
+		MarkedAsHelpful: err == nil,
 	}, nil
 }

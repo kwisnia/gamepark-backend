@@ -14,14 +14,14 @@ import (
 )
 
 type LoginForm struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required" binding:"min=8" binding:"max=50"`
 }
 
 type RegisterForm struct {
 	LoginForm
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
+	Username    string `json:"username" binding:"required" binding:"min=3" binding:"max=30"`
+	DisplayName string `json:"displayName" binding:"required" binding:"min=3" binding:"max=30"`
 }
 
 type ProfileEditForm struct {
@@ -33,7 +33,7 @@ type ProfileEditForm struct {
 }
 
 type BannerPositionForm struct {
-	Position float32 `json:"position" binding:"required" binding:"min=0" binding:"max=100"`
+	Position *float32 `json:"position" binding:"required" binding:"min=0" binding:"max=100"`
 }
 
 type DetailsResponse struct {
@@ -197,7 +197,7 @@ func UpdateUserBannerPositionHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id"})
 		return
 	}
-	err := UpdateUserBannerPosition(userID, form.Position)
+	err := UpdateUserBannerPosition(userID, *form.Position)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

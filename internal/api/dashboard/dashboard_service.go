@@ -41,7 +41,7 @@ func GetNewestActivitiesFromFollowedUsers(userID uint, pageSize int, page int) (
 		}
 		switch userActivity.Activity {
 		case activity.NewReview:
-			parsedActivity, err := GetReviewActivity(userActivity)
+			parsedActivity, err := GetReviewActivity(userActivity, userID)
 			if err != nil {
 				if !errors.Is(err, gorm.ErrRecordNotFound) {
 					return nil, err
@@ -78,12 +78,12 @@ func GetNewestActivitiesFromFollowedUsers(userID uint, pageSize int, page int) (
 	return parsedActivities, nil
 }
 
-func GetReviewActivity(userActivity activity.UserActivity) (*Activity, error) {
+func GetReviewActivity(userActivity activity.UserActivity, userID uint) (*Activity, error) {
 	reviewActivityData := activity.ReviewActivityData{}
 	if err := json.Unmarshal(userActivity.ActivityData, &reviewActivityData); err != nil {
 		return nil, err
 	}
-	review, err := reviews.GetReviewWithGameDetailsById(reviewActivityData.ReviewID)
+	review, err := reviews.GetReviewWithGameDetailsById(reviewActivityData.ReviewID, userID)
 	if err != nil {
 		return nil, err
 	}

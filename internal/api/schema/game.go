@@ -39,7 +39,7 @@ type Game struct {
 	Name                  string            `json:"name"`
 	ParentGame            *Game             `gorm:"foreignKey:ParentGameID" json:"-"`
 	ParentGameID          *uint             `json:"-"`
-	Platforms             []Platform        `gorm:"many2many:game_platforms" json:"-"`
+	Platforms             []Platform        `gorm:"many2many:game_platforms" json:"platforms"`
 	Rating                float64           `json:"rating"`
 	RatingCount           int               `json:"ratingCount"`
 	ReleaseDates          []ReleaseDate     `gorm:"foreignKey:GameID" json:"-"`
