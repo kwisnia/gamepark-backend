@@ -26,10 +26,7 @@ type Game struct {
 	Category              GameCategory      `gorm:"foreignKey:CategoryID" json:"-"`
 	CategoryID            uint              `json:"-"`
 	Cover                 Cover             `gorm:"foreignKey:GameID" json:"cover,omitempty"`
-	DLCs                  []Game            `gorm:"foreignKey:DLCBaseReference" json:"-"`
-	DLCBaseReference      *uint             `json:"-"`
-	ExpandedGames         []Game            `gorm:"foreignKey:ExpandedGameReference" json:"-"`
-	ExpandedGameReference *uint             `json:"-"`
+	ChildGames            []Game            `gorm:"foreignKey:ParentGameID" json:"-"`
 	Expansions            []Game            `gorm:"foreignKey:ExpansionReference" json:"-"`
 	ExpansionReference    *uint             `json:"-"`
 	ExternalGames         []ExternalGame    `gorm:"foreignKey:GameID" json:"-"`
@@ -43,10 +40,6 @@ type Game struct {
 	Rating                float64           `json:"rating"`
 	RatingCount           int               `json:"ratingCount"`
 	ReleaseDates          []ReleaseDate     `gorm:"foreignKey:GameID" json:"-"`
-	Remakes               []Game            `gorm:"foreignKey:RemakeBaseReference" json:"-"`
-	RemakeBaseReference   *uint             `json:"-"`
-	Remasters             []Game            `gorm:"foreignKey:RemasterBaseReference" json:"-"`
-	RemasterBaseReference *uint             `json:"-"`
 	Screenshots           []Screenshot      `gorm:"foreignKey:GameID" json:"screenshots"`
 	SimilarGames          []Game            `gorm:"many2many:game_similar_games;" json:"-"`
 	Slug                  string            `json:"slug" gorm:"unique"`
