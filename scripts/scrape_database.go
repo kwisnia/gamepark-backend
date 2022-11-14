@@ -35,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	clearDatabase()
+	//clearDatabase()
 	//err = fetchCompanies()
 	//if err != nil {
 	//	logger.Fatal(err)
@@ -44,15 +44,15 @@ func main() {
 	//if err != nil {
 	//	logger.Fatal(err)
 	//}
-	//err = fetchGames(112500)
-	//if err != nil {
-	//	logger.Fatal(err)
-	//}
-	fmt.Println("huh")
-	err = associateSimilarGames()
+	err = fetchGames(112500)
 	if err != nil {
-		return
+		logger.Fatal(err)
 	}
+	//fmt.Println("huh")
+	//err = associateSimilarGames()
+	//if err != nil {
+	//	return
+	//}
 }
 
 func fetchCompanies() error {
@@ -234,116 +234,6 @@ func fetchGames(offset int) error {
 				dbGame := createBaseGameObject(game, parentGameId, versionParentId)
 				if create := db.Create(&dbGame); create.Error != nil {
 					return create.Error
-				}
-				// dlc
-				for _, dlc := range game.DLCS {
-					dlcGame, err := prepareGame(dlc.ID, true)
-					if err != nil {
-						if errors.Is(err, igdb.ErrNoResults) {
-							continue
-						}
-						return err
-					}
-					parentGameIdRef := new(uint)
-					*parentGameIdRef = uint(game.ID)
-					dlcGame.DLCBaseReference = parentGameIdRef
-					if create := db.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"dlc_base_reference"}),
-					}).Create(dlcGame); create.Error != nil {
-						return create.Error
-					}
-					if err != nil {
-						return err
-					}
-				}
-				// expanded
-				for _, expanded := range game.ExpandedGames {
-					expandedGame, err := prepareGame(expanded.ID, true)
-					if err != nil {
-						if errors.Is(err, igdb.ErrNoResults) {
-							continue
-						}
-						return err
-					}
-					parentGameIdRef := new(uint)
-					*parentGameIdRef = uint(game.ID)
-					expandedGame.ExpandedGameReference = parentGameIdRef
-					if create := db.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"expanded_game_reference"}),
-					}).Create(expandedGame); create.Error != nil {
-						return create.Error
-					}
-					if err != nil {
-						return err
-					}
-				}
-				// expansions
-				for _, expansion := range game.Expansions {
-					expansionGame, err := prepareGame(expansion.ID, true)
-					if err != nil {
-						if errors.Is(err, igdb.ErrNoResults) {
-							continue
-						}
-						return err
-					}
-					parentGameIdRef := new(uint)
-					*parentGameIdRef = uint(game.ID)
-					expansionGame.ExpansionReference = parentGameIdRef
-					if create := db.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"expansion_reference"}),
-					}).Create(expansionGame); create.Error != nil {
-						return create.Error
-					}
-					if err != nil {
-						return err
-					}
-				}
-				// remakes
-				for _, remake := range game.Remakes {
-					remakeGame, err := prepareGame(remake.ID, true)
-					if err != nil {
-						if errors.Is(err, igdb.ErrNoResults) {
-							continue
-						}
-						return err
-					}
-					parentGameIdRef := new(uint)
-					*parentGameIdRef = uint(game.ID)
-					remakeGame.RemakeBaseReference = parentGameIdRef
-					if create := db.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"remake_base_reference"}),
-					}).Create(remakeGame); create.Error != nil {
-						return create.Error
-					}
-					if err != nil {
-						return err
-					}
-				}
-				// remasters
-				for _, remaster := range game.Remasters {
-					remasterGame, err := prepareGame(remaster.ID, true)
-					if err != nil {
-						if errors.Is(err, igdb.ErrNoResults) {
-							continue
-						}
-						return err
-					}
-					parentGameIdRef := new(uint)
-					*parentGameIdRef = uint(game.ID)
-					remasterGame.RemasterBaseReference = parentGameIdRef
-					if create := db.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"remaster_base_reference"}),
-					}).Create(remasterGame); create.Error != nil {
-						return create.Error
-					}
-					if err != nil {
-						return err
-					}
 				}
 			}
 		}
