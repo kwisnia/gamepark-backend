@@ -26,7 +26,6 @@ func GetUserDetails(userName string) *DetailsResponse {
 		return nil
 	}
 	return &DetailsResponse{
-		Email:          user.Email,
 		Username:       user.Username,
 		DisplayName:    user.UserProfile.DisplayName,
 		ID:             user.ID,

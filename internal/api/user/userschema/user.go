@@ -9,7 +9,6 @@ import (
 
 type User struct {
 	gorm.Model
-	Email                 string `gorm:"unique"`
 	Password              string
 	Username              string                               `gorm:"unique"`
 	FollowerCount         uint                                 `gorm:"default:0"`

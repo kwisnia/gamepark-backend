@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -60,4 +61,10 @@ func GetGameShortInfoHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "An error occurred"})
 	}
 	c.JSON(http.StatusOK, game)
+}
+
+func GameWebhookCreateHandler(c *gin.Context) {
+	body, _ := io.ReadAll(c.Request.Body)
+	println(string(body))
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }

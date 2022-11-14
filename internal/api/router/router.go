@@ -29,6 +29,7 @@ func Setup() *gin.Engine {
 	r.POST("/register", user.RegisterUserHandler)
 	r.GET("/users", user.GetUsersHandler)
 	r.GET("/games", games.GetGamesHandler)
+	r.GET("/games/test", games.GameWebhookCreateHandler)
 	r.GET("/games/:slug", games.GetGameHandler)
 	r.GET("/games/:slug/info", games.GetGameShortInfoHandler)
 	r.GET("games/:slug/user", middleware.AuthRequired(), user_game_info.GetUserGameInfoHandler)

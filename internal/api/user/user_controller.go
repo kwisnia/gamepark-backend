@@ -14,13 +14,12 @@ import (
 )
 
 type LoginForm struct {
-	Email    string `json:"email" binding:"required"`
+	Username string `json:"username" binding:"required" binding:"min=3" binding:"max=30"`
 	Password string `json:"password" binding:"required" binding:"min=8" binding:"max=50"`
 }
 
 type RegisterForm struct {
 	LoginForm
-	Username    string `json:"username" binding:"required" binding:"min=3" binding:"max=30"`
 	DisplayName string `json:"displayName" binding:"required" binding:"min=3" binding:"max=30"`
 }
 
@@ -37,7 +36,6 @@ type BannerPositionForm struct {
 }
 
 type DetailsResponse struct {
-	Email          string                       `json:"email"`
 	Username       string                       `json:"username"`
 	DisplayName    string                       `json:"displayName"`
 	ID             uint                         `json:"id"`
@@ -59,18 +57,12 @@ func RegisterUserHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	user := GetByEmail(form.Email)
-	if user != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid email"})
-		return
-	}
-	user = GetByUsername(form.Username)
+	user := GetByUsername(form.Username)
 	if user != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid username"})
 		return
 	}
 	user = &userschema.User{
-		Email:    form.Email,
 		Password: crypto.HashAndSalt(form.Password),
 		Username: form.Username,
 		UserProfile: userschema.UserProfile{
@@ -91,7 +83,7 @@ func RegisterUserHandler(c *gin.Context) {
 		return
 	}
 	c.Header("Authorization", token)
-	c.JSON(http.StatusCreated, gin.H{"email": user.Email})
+	c.JSON(http.StatusCreated, gin.H{"username": user.Username})
 }
 
 func LoginUserHandler(c *gin.Context) {
@@ -100,9 +92,9 @@ func LoginUserHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	user := GetByEmail(form.Email)
+	user := GetByUsername(form.Username)
 	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid email"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username"})
 		return
 	}
 	if !crypto.ComparePasswords(user.Password, form.Password) {
@@ -115,7 +107,7 @@ func LoginUserHandler(c *gin.Context) {
 		return
 	}
 	c.Header("Authorization", token)
-	c.JSON(http.StatusOK, gin.H{"email": user.Email})
+	c.JSON(http.StatusOK, gin.H{"username": user.Username})
 }
 
 func GetDetailsHandler(c *gin.Context) {

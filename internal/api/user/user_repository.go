@@ -15,14 +15,6 @@ func UpdateUser(u *userschema.User) error {
 	return database.DB.Session(&gorm.Session{FullSaveAssociations: true}).Save(u).Error
 }
 
-func GetByEmail(email string) *userschema.User {
-	var u userschema.User
-	if err := database.DB.Where("email = ?", email).First(&u).Error; err != nil {
-		return nil
-	}
-	return &u
-}
-
 func GetByUsername(username string) *userschema.User {
 	var u userschema.User
 	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("username = ?", username).First(&u).Error; err != nil {
