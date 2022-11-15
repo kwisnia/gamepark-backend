@@ -64,7 +64,9 @@ values ('main_game', 0),
        ('remaster', 9),
        ('expanded_game', 10),
        ('port', 11),
-       ('fork', 12);
+       ('fork', 12),
+       ('pack_addon', 13),
+       ('update', 14);
 
 insert into external_categories
     (name, id)

@@ -27,8 +27,6 @@ type Game struct {
 	CategoryID            uint              `json:"-"`
 	Cover                 Cover             `gorm:"foreignKey:GameID" json:"cover,omitempty"`
 	ChildGames            []Game            `gorm:"foreignKey:ParentGameID" json:"-"`
-	Expansions            []Game            `gorm:"foreignKey:ExpansionReference" json:"-"`
-	ExpansionReference    *uint             `json:"-"`
 	ExternalGames         []ExternalGame    `gorm:"foreignKey:GameID" json:"-"`
 	FirstReleaseDate      time.Time         `json:"firstReleaseDate"`
 	Genres                []Genre           `gorm:"many2many:game_genres" json:"genres"`
