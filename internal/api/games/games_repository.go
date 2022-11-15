@@ -47,7 +47,16 @@ func GetSimilarGames(id uint) ([]schema2.GameSimilarGame, error) {
 
 func GetGameBySlug(slug string) (schema2.Game, error) {
 	game := schema2.Game{}
-	if err := database.DB.Preload("ExternalGames.Category").Preload("InvolvedCompanies.Company").Preload(clause.Associations).Where("slug = ?", slug).First(&game).Error; err != nil {
+	if err := database.DB.
+		Preload("InvolvedCompanies.Company").
+		Preload("Artworks").
+		Preload("Videos").
+		Preload("Screenshots").
+		Preload("Cover").
+		Preload("Genres").
+		Preload("Platforms").
+		Preload("SimilarGames").
+		Where("slug = ?", slug).First(&game).Error; err != nil {
 		return game, err
 	}
 	return game, nil

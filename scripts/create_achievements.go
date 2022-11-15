@@ -16,13 +16,6 @@ func main() {
 	db := database.DB
 	newAchievements := []achievements.Achievement{
 		{
-			Name:          "First profile edit",
-			Description:   "Edit your profile for the first time",
-			Icon:          "https://gamepark-images.s3.eu-central-1.amazonaws.com/one-badge.svg",
-			Points:        5,
-			ConditionType: achievements.ConditionTypeProfileFirstEdit,
-		},
-		{
 			Name:           "First review",
 			Description:    "Write your first review",
 			Icon:           "https://gamepark-images.s3.eu-central-1.amazonaws.com/star-badge.svg",
