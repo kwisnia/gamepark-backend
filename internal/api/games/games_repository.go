@@ -55,7 +55,6 @@ func GetGameBySlug(slug string) (schema2.Game, error) {
 		Preload("Cover").
 		Preload("Genres").
 		Preload("Platforms").
-		Preload("SimilarGames").
 		Where("slug = ?", slug).First(&game).Error; err != nil {
 		return game, err
 	}

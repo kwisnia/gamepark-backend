@@ -17,7 +17,7 @@ func UpdateUser(u *userschema.User) error {
 
 func GetByUsername(username string) *userschema.User {
 	var u userschema.User
-	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("username = ?", username).First(&u).Error; err != nil {
+	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("LOWER(username) = ?", username).First(&u).Error; err != nil {
 		return nil
 	}
 	return &u
@@ -44,6 +44,6 @@ func GetPageQuery(pageSize int, offset int, search string) *gorm.DB {
 	fmt.Println(offset)
 	// search by username or display name
 	query := database.DB.Preload("UserProfile").Model(&userschema.User{}).
-		Limit(pageSize).Offset(offset).Order("created_at DESC").Where("username LIKE ?", "%"+search+"%")
+		Limit(pageSize).Offset(offset).Order("created_at DESC").Where("LOWER(username) LIKE ?", "%"+search+"%")
 	return query
 }

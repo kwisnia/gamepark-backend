@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kwisnia/inzynierka-backend/pkg/crypto"
@@ -92,7 +93,7 @@ func LoginUserHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	user := GetByUsername(form.Username)
+	user := GetByUsername(strings.ToLower(form.Username))
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username"})
 		return
