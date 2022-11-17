@@ -21,14 +21,23 @@ func GetUserGameInfo(slug string, userID uint) (*UserGameDetails, error) {
 		return nil, err
 	}
 	listsWhereGameIs, err := lists.GetUsersListsWhereGameIs(game.ID, userID)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	userGameReview, err := reviews.GetUserGameReview(game.Slug, userID)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
+	if userGameReview == nil {
+		return &UserGameDetails{
+			Lists:  listsWhereGameIs,
+			Review: nil,
+		}, nil
+	}
 	userDetails := user.GetBasicUserDetailsByID(userID)
+	if userDetails == nil {
+		return nil, errors.New("user not found")
+	}
 	_, err = reviews.GetHelpfulByUserAndReview(userID, userGameReview.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -41,4 +50,5 @@ func GetUserGameInfo(slug string, userID uint) (*UserGameDetails, error) {
 			MarkedAsHelpful: err == nil,
 		},
 	}, nil
+
 }
