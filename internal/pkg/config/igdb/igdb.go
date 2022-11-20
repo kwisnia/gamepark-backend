@@ -17,10 +17,10 @@ func SetupClient() {
 }
 
 func SetupWebhooks() {
-	apiUrl := "https://api.igdb.com/v4"
-	resource := "/games/webhooks"
+	apiUrl := "https://api.igdb.com"
+	resource := "v4/games/webhooks"
 	data := url.Values{}
-	data.Set("url", "https://api.gamepark.space/games/webhooks")
+	data.Set("url", "https://api.gamepark.space/games/webhooks/")
 	data.Set("method", "create")
 	data.Set("secret", config.GetEnv("WEBHOOK_SECRET"))
 
@@ -29,10 +29,16 @@ func SetupWebhooks() {
 	urlStr := u.String()
 
 	client := &http.Client{}
+
+	fmt.Println("urlStr", urlStr)
 	r, _ := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 	r.Header.Add("Authorization", "Bearer "+config.GetEnv("IGDB_ACCESS_TOKEN"))
 	r.Header.Add("Client-ID", config.GetEnv("IGDB_CLIENT_ID"))
-	_, err := client.Do(r)
+	resp, err := client.Do(r)
+	response := []byte{}
+	fmt.Println(resp.StatusCode)
+	resp.Body.Read(response)
+	fmt.Println(string(response))
 	if err != nil {
 		panic(err)
 	}
