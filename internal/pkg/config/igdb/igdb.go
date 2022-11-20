@@ -30,15 +30,10 @@ func SetupWebhooks() {
 
 	client := &http.Client{}
 
-	fmt.Println("urlStr", urlStr)
 	r, _ := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 	r.Header.Add("Authorization", "Bearer "+config.GetEnv("IGDB_ACCESS_TOKEN"))
 	r.Header.Add("Client-ID", config.GetEnv("IGDB_CLIENT_ID"))
-	resp, err := client.Do(r)
-	response := []byte{}
-	fmt.Println(resp.StatusCode)
-	resp.Body.Read(response)
-	fmt.Println(string(response))
+	_, err := client.Do(r)
 	if err != nil {
 		panic(err)
 	}
