@@ -5,6 +5,7 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/user/userschema"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
 	"gorm.io/gorm"
+	"strings"
 )
 
 func SaveNewUser(u *userschema.User) {
@@ -17,7 +18,7 @@ func UpdateUser(u *userschema.User) error {
 
 func GetByUsername(username string) *userschema.User {
 	var u userschema.User
-	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("LOWER(username) = ?", username).First(&u).Error; err != nil {
+	if err := database.DB.Preload("UserProfile").Preload("UserFeatureUnlock").Preload("Lists").Where("LOWER(username) = ?", strings.ToLower(username)).First(&u).Error; err != nil {
 		return nil
 	}
 	return &u
@@ -33,7 +34,7 @@ func GetByID(id uint) *userschema.User {
 
 func GetBySearch(pageSize int, offset int, search string) ([]userschema.User, error) {
 	var users []userschema.User
-	query := GetPageQuery(pageSize, offset, search)
+	query := GetPageQuery(pageSize, offset, strings.ToLower(search))
 	if err := query.Find(&users).Error; err != nil {
 		return nil, err
 	}
