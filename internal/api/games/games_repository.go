@@ -84,3 +84,23 @@ func GetGameShortInfosByIds(ids []uint) ([]GameListElement, error) {
 	}
 	return games, nil
 }
+
+func CreateGame(game *schema2.Game) error {
+	return database.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&game).Error
+}
+
+func UpdateGame(game *schema2.Game) error {
+	return database.DB.Session(&gorm.Session{FullSaveAssociations: true}).Save(game).Error
+}
+
+func DeleteGame(id uint) error {
+	return database.DB.Delete(&schema2.Game{}, id).Error
+}
+
+func GetExternalCategories() ([]schema2.ExternalCategory, error) {
+	var categories []schema2.ExternalCategory
+	if err := database.DB.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+	return categories, nil
+}

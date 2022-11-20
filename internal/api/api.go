@@ -6,6 +6,7 @@ import (
 	"github.com/kwisnia/inzynierka-backend/internal/api/websocket"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/awsconf"
 	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/database"
+	"github.com/kwisnia/inzynierka-backend/internal/pkg/config/igdb"
 	"log"
 )
 
@@ -16,6 +17,8 @@ func Run() {
 	}
 	r := router.Setup()
 	database.SetupDB()
+	igdb.SetupClient()
+	igdb.SetupWebhooks()
 	awsconf.ConnectAws()
 	go websocket.ClientHub.Run()
 	r.Run()

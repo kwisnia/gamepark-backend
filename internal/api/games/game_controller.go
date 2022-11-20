@@ -4,15 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/kwisnia/inzynierka-backend/internal/pkg/config"
 	"gorm.io/gorm"
-	"io"
 	"net/http"
 	"strconv"
 )
 
-type GamePage struct {
-	data       []GameListElement
-	nextCursor uint
+type GameForm struct {
+	ID uint `json:"id"`
 }
 
 // get games
@@ -64,7 +63,61 @@ func GetGameShortInfoHandler(c *gin.Context) {
 }
 
 func GameWebhookCreateHandler(c *gin.Context) {
-	body, _ := io.ReadAll(c.Request.Body)
-	println(string(body))
+	var gameForm GameForm
+	err := c.ShouldBindJSON(&gameForm)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	secret := c.GetHeader("X-Secret")
+	if secret != config.GetEnv("WEBHOOK_SECRET") {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid secret"})
+		return
+	}
+	err = CreateWebhookGame(int(gameForm.ID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "An error occurred"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+func GameWebhookDeleteHandler(c *gin.Context) {
+	var gameForm GameForm
+	err := c.ShouldBindJSON(&gameForm)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	secret := c.GetHeader("X-Secret")
+	if secret != config.GetEnv("WEBHOOK_SECRET") {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid secret"})
+		return
+	}
+	err = DeleteWebhookGame(int(gameForm.ID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "An error occurred"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+func GameWebhookUpdateHandler(c *gin.Context) {
+	var gameForm GameForm
+	err := c.ShouldBindJSON(&gameForm)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	secret := c.GetHeader("X-Secret")
+	if secret != config.GetEnv("WEBHOOK_SECRET") {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid secret"})
+		return
+	}
+	err = UpdateWebhookGame(int(gameForm.ID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "An error occurred"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
