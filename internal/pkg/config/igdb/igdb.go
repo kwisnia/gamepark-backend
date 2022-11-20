@@ -20,7 +20,7 @@ func SetupWebhooks() {
 	apiUrl := "https://api.igdb.com"
 	resource := "v4/games/webhooks"
 	data := url.Values{}
-	data.Set("url", "https://api.gamepark.space/games/webhooks/")
+	data.Set("url", "https://api.gamepark.space/games/webhooks/create")
 	data.Set("method", "create")
 	data.Set("secret", config.GetEnv("WEBHOOK_SECRET"))
 
@@ -40,6 +40,7 @@ func SetupWebhooks() {
 	fmt.Println("Webhook create created")
 
 	data.Set("method", "update")
+	data.Set("url", "https://api.gamepark.space/games/webhooks/update")
 	r, _ = http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 	r.Header.Add("Authorization", "Bearer "+config.GetEnv("IGDB_ACCESS_TOKEN"))
 	r.Header.Add("Client-ID", config.GetEnv("IGDB_CLIENT_ID"))
@@ -50,6 +51,7 @@ func SetupWebhooks() {
 	fmt.Println("Webhook update created")
 
 	data.Set("method", "delete")
+	data.Set("url", "https://api.gamepark.space/games/webhooks/delete")
 	r, _ = http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 	r.Header.Add("Authorization", "Bearer "+config.GetEnv("IGDB_ACCESS_TOKEN"))
 	r.Header.Add("Client-ID", config.GetEnv("IGDB_CLIENT_ID"))
