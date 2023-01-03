@@ -143,7 +143,7 @@ func UpdateUserProfile(userID uint, username string, userProfileForm ProfileEdit
 	}
 	if userProfileForm.Banner != nil {
 		validFile := true
-		if !userUnlocks.Banner {
+		if !userUnlocks.AnimatedBanner {
 			fileContent, _ := userProfileForm.Banner.Open()
 			buf := make([]byte, 512)
 
